@@ -136,6 +136,20 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
 /* NAV BOTTOM */
 .nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);padding:8px 10px;display:flex;gap:5px;justify-content:center;flex-wrap:wrap;z-index:100;}
 
+
+/* PANEL VISUAL */
+.visual-panel{background:linear-gradient(135deg,#0a1520,#091018);border:1px solid rgba(78,203,141,0.2);border-radius:var(--r);padding:16px;margin-bottom:12px;min-height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;overflow:hidden;}
+.visual-title{font-size:11px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;}
+.visual-diagram{width:100%;max-width:340px;margin:0 auto;}
+.visual-fact{background:rgba(78,203,141,0.06);border:1px solid rgba(78,203,141,0.15);border-radius:var(--rs);padding:10px 14px;font-size:13px;color:var(--text2);margin-top:10px;line-height:1.5;}
+.dino-bounce{animation:dinoBounce 1s ease infinite alternate;}
+@keyframes dinoBounce{from{transform:translateY(0)}to{transform:translateY(-6px)}}
+.pulse-dot{width:10px;height:10px;border-radius:50%;background:var(--green);animation:pulse 1.5s ease infinite;display:inline-block;margin-right:6px;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.8)}}
+.celebrate{position:fixed;inset:0;z-index:9000;pointer-events:none;display:flex;align-items:center;justify-content:center;}
+.celebrate-box{background:var(--bg2);border:2px solid var(--green);border-radius:var(--r);padding:24px 32px;text-align:center;animation:popIn 0.4s ease;}
+@keyframes popIn{from{transform:scale(0.5);opacity:0}to{transform:scale(1);opacity:1}}
+
 /* NOTIF */
 .notif{position:fixed;top:16px;left:16px;right:16px;background:#0f2a1a;border:1px solid var(--green);border-radius:var(--r);padding:12px 16px;z-index:9999;font-size:13px;color:var(--green);box-shadow:0 8px 32px rgba(0,0,0,0.5);animation:fu 0.3s ease;}
 
@@ -192,7 +206,14 @@ input[type=range]{flex:1;accent-color:var(--purple2);}
       <div class="av" id="av-bloques">😊<div class="dot"></div></div>
       <div><div class="tn" id="blq-greeting">¡Hola, Catalina!</div><div class="ts">Completa los bloques para desbloquear tu recompensa</div></div>
     </div>
-    <span class="timer-pill" id="session-clock">00:00</span>
+    <div style="display:flex;gap:6px;align-items:center;">
+      <button id="btn-binaural" onclick="toggleBinaural(!binauralActivo)" 
+        style="background:rgba(160,143,239,0.1);border:1px solid rgba(160,143,239,0.2);color:var(--purple2);border-radius:20px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:'Nunito',sans-serif;" 
+        title="Modo concentración (binaural beats)">
+        🎵 Concentración
+      </button>
+      <span class="timer-pill" id="session-clock">00:00</span>
+    </div>
   </div>
 
   <div class="card">
@@ -286,10 +307,11 @@ input[type=range]{flex:1;accent-color:var(--purple2);}
 <div class="modal" id="modal-continuar" style="display:none;">
   <div class="modal-box">
     <div class="modal-emoji">⏰</div>
-    <div class="modal-title">¿Seguimos aprendiendo?</div>
-    <div class="modal-sub">Llevas 30 minutos estudiando. ¡Lo estás haciendo genial! ¿Quieres continuar o tomar un descanso?</div>
-    <button class="btn" style="margin-bottom:8px;" onclick="continuarSesion()">¡Sigo aprendiendo! 💪</button>
-    <button class="btn-sec" style="width:100%;" onclick="pausarSesion()">Necesito un descanso</button>
+    <div class="modal-title" id="modal-continuar-title">¿Seguimos aprendiendo?</div>
+    <div class="modal-sub" id="modal-continuar-sub">Llevas 20 minutos estudiando. ¡Lo estás haciendo increíble, Catalina! ¿Quieres seguir?</div>
+    <button class="btn" style="margin-bottom:8px;" onclick="agregarTiempo(10)">➕ 10 minutos más 💪</button>
+    <button class="btn-sec" style="width:100%;margin-bottom:8px;" onclick="agregarTiempo(10)" id="btn-otros-10" style="display:none;">➕ Otros 10 minutos 🔥</button>
+    <button class="btn-sec" style="width:100%;margin-top:4px;" onclick="pausarSesion()">Prefiero descansar 😴</button>
   </div>
 </div>
 
@@ -318,7 +340,7 @@ let state = {
   sesionSecs: 0, claseSecs: 0,
   claseActual: null, chatHistory: [],
   paleoHistory: [],
-  minutosAlert: 30,
+  minutosAlert: 20,
   log: { materias:[], correctas:0, total:0, alertas:[] }
 };
 
@@ -357,6 +379,7 @@ function setMood(el, emoji, label, tip) {
 
 // ══ RELOJ SESION ══
 let sesionInterval = null;
+let extensionesUsadas = 0;
 function iniciarRelojSesion() {
   if(sesionInterval) return;
   sesionInterval = setInterval(()=>{
@@ -371,22 +394,53 @@ function iniciarRelojSesion() {
   },1000);
 }
 
-function continuarSesion() {
+
+function agregarTiempo(mins) {
+  extensionesUsadas++;
+  state.minutosAlert += mins;
   document.getElementById('modal-continuar').style.display='none';
-  state.minutosAlert += 30;
-  notif('¡Excelente, Catalina! Seguimos aprendiendo 💪');
+  
+  if(extensionesUsadas === 1) {
+    notif('¡Genial! 10 minutos más. ¡Tú puedes, Catalina! 🦕');
+  } else if(extensionesUsadas === 2) {
+    notif('¡Increíble energía hoy! Otros 10 minutos 🔥');
+    // Después de 2 extensiones, preguntar con más cariño
+    state.minutosAlert = state.sesionSecs/60 + 10;
+  } else {
+    notif('¡Eres una campeona! Seguimos 💪');
+    state.minutosAlert = state.sesionSecs/60 + 10;
+  }
+}
+
+function continuarSesion() {
+  agregarTiempo(10);
 }
 function pausarSesion() {
   document.getElementById('modal-continuar').style.display='none';
   notif('Descansa un momento. Vuelve cuando quieras 🌟');
 }
 function mostrarModalContinuar() {
-  document.getElementById('modal-continuar').style.display='flex';
+  const modal = document.getElementById('modal-continuar');
+  const title = document.getElementById('modal-continuar-title');
+  const sub = document.getElementById('modal-continuar-sub');
+  const mins = Math.floor(state.sesionSecs/60);
+  
+  if(extensionesUsadas === 0) {
+    title.textContent = '¿Seguimos aprendiendo?';
+    sub.textContent = `Llevas ${mins} minutos estudiando. ¡Lo estás haciendo increíble! ¿Quieres 10 minutos más?`;
+  } else if(extensionesUsadas === 1) {
+    title.textContent = '¡Estás en racha! 🔥';
+    sub.textContent = `¡${mins} minutos y sigues fuerte! ¿Otros 10 minutos o descansamos?`;
+  } else {
+    title.textContent = '¡Wow, Catalina! 🏆';
+    sub.textContent = `¡Llevas ${mins} minutos! Eso es mucho esfuerzo. ¿Un poquito más o descansamos?`;
+  }
+  modal.style.display='flex';
 }
 
 // ══ BLOQUES ══
 const bloquesConfig = [
-  { id:'math', icon:'📐', name:'Matemáticas', desc:'Funciones lineales con ejemplos de estratos de roca', pony:'Twilight Sparkle', sistema:`Eres el Profe IA de Catalina, 14 años, TDAH combinado + TEA. Materia: MATEMÁTICAS 8° básico chileno (funciones lineales, ecuaciones, geometría). REGLAS ABSOLUTAS: 1) PRIMERO explica el tema completo en español neutro, claro, con ejemplos concretos conectados a GEOLOGÍA o PALEONTOLOGÍA. 2) Habla directo a Catalina, cálido y motivador. 3) Frases cortas. Una idea a la vez. 4) Después de explicar, haz UN ejercicio. 5) Si no entiende, explica de OTRA forma diferente. 6) Si detectas desánimo, cambia a algo más fácil o visual. 7) NUNCA inventes información. 8) Si dice que está cansada o no quiere, para y pregunta qué necesita.` },
+  { id:'math', icon:'📐', name:'Matemáticas', desc:'Funciones lineales con ejemplos de estratos de roca', pony:'Twilight Sparkle', sistema:`Eres el Profe IA de Catalina, 14 años, TDAH combinado y TEA. Eres su profe favorito: paciente, cálido, apasionado por los dinosaurios igual que ella. Materia: MATEMÁTICAS 8° básico chileno. REGLAS: 1) Saluda con energía y con un emoji de dinosaurio. 2) SIEMPRE explica primero el tema completo, con ejemplos de fósiles, rocas o dinosaurios. 3) Usa emojis para destacar ideas clave. 4) Frases MUY cortas. Una idea por párrafo. 5) Después de explicar bien, propón UN ejercicio concreto. 6) Si no entiende, cambia el ejemplo completamente — nunca repitas lo mismo. 7) Si parece cansada o responde poco, para y pregunta: ¿Quieres que descansemos un momento? 8) Termina cada respuesta con una pregunta corta o un dato curioso de dinosaurios. 9) NUNCA inventes datos. 10) Cuando logre algo, celébralo con entusiasmo genuino.` },
   { id:'lengua', icon:'📖', name:'Lengua y Literatura', desc:'Texto argumentativo y análisis literario', pony:'Rarity', sistema:`Eres el Profe IA de Catalina, 14 años, TDAH combinado + TEA. Materia: LENGUA Y LITERATURA 8° básico chileno. REGLAS ABSOLUTAS: 1) PRIMERO explica el tema en español neutro con ejemplos de textos sobre dinosaurios o naturaleza cuando sea posible. 2) Habla directo a Catalina, cálido. 3) Frases cortas. Una idea a la vez. 4) Después de explicar, haz una actividad breve. 5) Si no entiende, usa otra estrategia. 6) NUNCA inventes.` },
   { id:'historia', icon:'🗺️', name:'Historia', desc:'Humanismo, conquista y línea de tiempo geológica', pony:'Applejack', sistema:`Eres el Profe IA de Catalina, 14 años, TDAH combinado + TEA. Materia: HISTORIA 8° básico chileno. REGLAS ABSOLUTAS: 1) PRIMERO explica el tema conectándolo cuando puedas con descubrimientos geológicos o paleontológicos de la época (ej: Leonardo da Vinci y los fósiles). 2) Español neutro, claro, directo. 3) Frases cortas. 4) Después de explicar, haz una pregunta. 5) Si no entiende, usa otra estrategia. 6) NUNCA inventes.` },
   { id:'ciencias', icon:'🔬', name:'Ciencias Naturales', desc:'Biología, química y geología básica', pony:'Twilight Sparkle', sistema:`Eres el Profe IA de Catalina, 14 años, TDAH combinado + TEA. Materia: CIENCIAS NATURALES 8° básico chileno. REGLAS ABSOLUTAS: 1) PRIMERO explica el tema completo con conexiones a GEOLOGÍA y PALEONTOLOGÍA siempre que puedas. 2) Español neutro, claro, motivador. 3) Frases cortas. 4) Después de explicar, haz una actividad. 5) Si no entiende, cambia la estrategia. 6) NUNCA inventes.` }
@@ -433,7 +487,9 @@ function iniciarClase(bloque) {
   goTo('s-clase');
   // Mensaje inicial del profe IA
   const ponies = {math:'🟣 Twilight Sparkle',lengua:'💎 Rarity',historia:'🍎 Applejack',ciencias:'🟣 Twilight Sparkle'};
-  const intro = `¡Hola Catalina! Hoy vamos a estudiar **${bloque.name}**. Primero te voy a explicar todo bien, y después hacemos algunos ejercicios juntos. No hay apuro. ¿Lista?`;
+  const emojis = {math:'📐🦕', lengua:'📖✨', historia:'🗺️🦴', ciencias:'🔬🌋'};
+  const emoji = emojis[bloque.id] || '📚';
+  const intro = `${emoji} ¡Hola, Catalina! Hoy exploramos ${bloque.name} juntos. Primero te explico todo bien — sin apuro, sin presión. Después hacemos algo juntos. ¿Lista para empezar?`;
   agregarMsg('profe', intro);
   llamarIA([{role:'user',content:`Hola profe, estoy lista para aprender ${bloque.name}. Mi estado de ánimo hoy es: ${state.mood}, concentración: ${state.concentracion}/5, energía: ${state.energia}/5.`}], bloque.sistema, (resp)=>{
     agregarMsg('profe', resp);
@@ -469,6 +525,7 @@ function enviar() {
   llamarIA(state.chatHistory, state.claseActual.sistema, (resp)=>{
     state.chatHistory.push({role:'assistant',content:resp});
     agregarMsg('profe', resp);
+    actualizarVisual(state.claseActual.id, resp);
     // Si el profe detecta que terminó la unidad, marcar como done
     if(resp.toLowerCase().includes('¡excelente') || resp.toLowerCase().includes('lo lograste') || resp.toLowerCase().includes('completaste')) {
       setTimeout(()=>completarBloque(state.claseActual.id), 1000);
@@ -479,6 +536,9 @@ function enviar() {
 function completarBloque(id) {
   if(claseInterval){clearInterval(claseInterval);claseInterval=null;}
   state.bloques[id] = true;
+  celebrar(state.claseActual.name);
+  registrarBloqueCompletado(state.claseActual.name);
+  registrarSesion(Math.floor(state.claseSecs/60));
   agregarMsg('profe', `🎉 ¡Increíble, Catalina! Completaste ${state.claseActual.name}. ¡Un bloque más cerca de los dinosaurios!`);
   document.getElementById('clase-fill').style.width = '100%';
   document.getElementById('clase-etapa').textContent = '¡Completado!';
@@ -488,6 +548,7 @@ function completarBloque(id) {
 
 function salirClase() {
   if(claseInterval){clearInterval(claseInterval);claseInterval=null;}
+  detenerBinaural();
   goTo('s-bloques');
 }
 
@@ -566,7 +627,31 @@ function agregarMsg(quien, texto) {
   const chat = document.getElementById('chat');
   const d = document.createElement('div');
   d.className = 'msg ' + (quien==='profe'?'msg-profe':'msg-cata');
-  d.textContent = texto;
+  if(quien === 'profe') {
+    const textoHtml = renderMarkdown(texto);
+    d.innerHTML = textoHtml;
+    // Agregar controles de voz
+    const ctrl = document.createElement('div');
+    ctrl.style.cssText = 'display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;';
+    ctrl.innerHTML = `
+      <button onclick="hablarTexto(this.closest('.msg').querySelector('div,p,br')? this.closest('.msg').innerText : '${texto.replace(/'/g,"\'")}' )" 
+        style="background:rgba(78,203,141,0.1);border:1px solid rgba(78,203,141,0.2);color:var(--green);border-radius:20px;padding:4px 12px;font-size:11px;cursor:pointer;font-family:'Nunito',sans-serif;">
+        🔊 Escuchar
+      </button>
+      <button onclick="detenerVoz()" 
+        style="background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.2);color:var(--red);border-radius:20px;padding:4px 12px;font-size:11px;cursor:pointer;font-family:'Nunito',sans-serif;">
+        ⏹ Pausar
+      </button>
+      <button onclick="retroceder10()" 
+        style="background:rgba(255,209,102,0.1);border:1px solid rgba(255,209,102,0.2);color:var(--yellow);border-radius:20px;padding:4px 12px;font-size:11px;cursor:pointer;font-family:'Nunito',sans-serif;">
+        ↩ Repetir
+      </button>`;
+    d.appendChild(ctrl);
+    // Auto-hablar mensajes del profe
+    setTimeout(() => hablarTexto(texto), 300);
+  } else {
+    d.textContent = texto;
+  }
   chat.appendChild(d);
   chat.scrollTop = chat.scrollHeight;
   return d;
@@ -584,7 +669,25 @@ function agregarMsgPaleo(quien, texto) {
   const chat = document.getElementById('paleo-chat-area');
   const d = document.createElement('div');
   d.className = 'msg ' + (quien==='profe'?'msg-profe':'msg-cata');
-  d.textContent = texto;
+  if(quien === 'profe') {
+    d.innerHTML = renderMarkdown(texto);
+    const ctrl = document.createElement('div');
+    ctrl.style.cssText = 'display:flex;gap:6px;margin-top:8px;';
+    ctrl.innerHTML = `
+      <button onclick="hablarTexto('${texto.replace(/'/g,"\'").replace(/
+/g,' ')}')" 
+        style="background:rgba(78,203,141,0.1);border:1px solid rgba(78,203,141,0.2);color:var(--green);border-radius:20px;padding:4px 12px;font-size:11px;cursor:pointer;font-family:'Nunito',sans-serif;">
+        🔊 Escuchar
+      </button>
+      <button onclick="detenerVoz()" 
+        style="background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.2);color:var(--red);border-radius:20px;padding:4px 12px;font-size:11px;cursor:pointer;font-family:'Nunito',sans-serif;">
+        ⏹ Pausar
+      </button>`;
+    d.appendChild(ctrl);
+    setTimeout(() => hablarTexto(texto), 300);
+  } else {
+    d.textContent = texto;
+  }
   chat.appendChild(d);
   chat.scrollTop = chat.scrollHeight;
   return d;
@@ -683,8 +786,311 @@ async function activarKey() {
   }
 }
 
+
+function renderMarkdown(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/##\s(.+)/g, '<div style="font-size:16px;font-weight:700;color:var(--green);margin:8px 0 4px;">$1</div>')
+    .replace(/###\s(.+)/g, '<div style="font-size:14px;font-weight:700;color:var(--purple2);margin:6px 0 3px;">$1</div>')
+    .replace(/---/g, '<hr style="border:none;border-top:1px solid var(--border);margin:8px 0;">')
+    .replace(/```([^`]+)```/g, '<code style="background:var(--bg3);padding:8px 12px;border-radius:8px;display:block;margin:6px 0;font-family:monospace;font-size:13px;">$1</code>')
+    .replace(/`([^`]+)`/g, '<code style="background:var(--bg3);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:12px;">$1</code>')
+    .replace(/\n/g, '<br>');
+}
+
+// ═══ TEXTO A VOZ ═══
+let speechInstance = null;
+let speechTexto = '';
+let speechPos = 0;
+
+function hablarTexto(texto) {
+  if(!window.speechSynthesis) return;
+  detenerVoz();
+  speechTexto = texto.replace(/<[^>]+>/g, '').replace(/\n/g, ' ');
+  const utter = new SpeechSynthesisUtterance(speechTexto);
+  utter.lang = 'es-CL';
+  utter.rate = 0.9;
+  utter.pitch = 1.05;
+  // Buscar voz en español
+  const voces = window.speechSynthesis.getVoices();
+  const vozES = voces.find(v => v.lang.includes('es')) || voces[0];
+  if(vozES) utter.voice = vozES;
+  speechInstance = utter;
+  window.speechSynthesis.speak(utter);
+}
+
+function detenerVoz() {
+  if(window.speechSynthesis) window.speechSynthesis.cancel();
+}
+
+function retroceder10() {
+  detenerVoz();
+  if(speechTexto) {
+    // Reiniciar desde el principio (limitación del browser)
+    hablarTexto(speechTexto);
+  }
+}
+
+
+// ═══ PANEL VISUAL ═══
+const visuales = {
+  math: {
+    pitagoras: { dino:'📐', diagrama: `<svg viewBox="0 0 200 160" style="width:100%;max-width:200px;margin:8px auto;display:block;">
+      <polygon points="20,140 140,140 140,20" fill="none" stroke="#4ecb8d" stroke-width="2"/>
+      <rect x="128" y="128" width="12" height="12" fill="none" stroke="#4ecb8d" stroke-width="1.5"/>
+      <text x="75" y="158" fill="#a89ec8" font-size="11" text-anchor="middle">a (base)</text>
+      <text x="155" y="85" fill="#a89ec8" font-size="11">b</text>
+      <text x="60" y="75" fill="#ffd166" font-size="12" font-weight="bold">c²=a²+b²</text>
+      <text x="20" y="125" fill="#4ecb8d" font-size="10">🦴fósil A</text>
+      <text x="140" y="15" fill="#4ecb8d" font-size="10">🦴fósil B</text>
+    </svg>`, texto:'Triángulo rectángulo con fósiles' },
+    funcion: { dino:'📈', diagrama: `<svg viewBox="0 0 200 160" style="width:100%;max-width:200px;margin:8px auto;display:block;">
+      <line x1="20" y1="140" x2="180" y2="140" stroke="#4ecb8d" stroke-width="1.5"/>
+      <line x1="20" y1="10" x2="20" y2="145" stroke="#4ecb8d" stroke-width="1.5"/>
+      <line x1="20" y1="120" x2="170" y2="20" stroke="#ffd166" stroke-width="2"/>
+      <text x="90" y="158" fill="#a89ec8" font-size="10" text-anchor="middle">Tiempo (años)</text>
+      <text x="5" y="80" fill="#a89ec8" font-size="10" transform="rotate(-90,5,80)">Estrato (m)</text>
+      <text x="110" y="45" fill="#ffd166" font-size="11">y = mx + b</text>
+    </svg>`, texto:'Función lineal: estratos de roca' }
+  },
+  lengua: { dino:'📖', texto:'Estructura del texto', diagrama:`<div style="text-align:left;font-size:12px;color:var(--text2);line-height:1.8;"><div style="color:var(--purple2);font-weight:700;">📌 Tesis</div><div style="padding-left:12px;">Tu idea principal</div><div style="color:var(--purple2);font-weight:700;margin-top:4px;">💬 Argumentos</div><div style="padding-left:12px;">Razones que la apoyan</div><div style="color:var(--purple2);font-weight:700;margin-top:4px;">✅ Conclusión</div><div style="padding-left:12px;">Cierre con tu postura</div></div>` },
+  historia: { dino:'🗺️', texto:'Línea de tiempo', diagrama:`<svg viewBox="0 0 280 80" style="width:100%;max-width:280px;margin:8px auto;display:block;">
+    <line x1="20" y1="40" x2="260" y2="40" stroke="#4ecb8d" stroke-width="2"/>
+    <circle cx="60" cy="40" r="5" fill="#ffd166"/>
+    <circle cx="140" cy="40" r="5" fill="#ff9eb5"/>
+    <circle cx="220" cy="40" r="5" fill="#a08fef"/>
+    <text x="60" y="25" fill="#ffd166" font-size="9" text-anchor="middle">Humanismo</text>
+    <text x="140" y="25" fill="#ff9eb5" font-size="9" text-anchor="middle">Conquista</text>
+    <text x="220" y="25" fill="#a08fef" font-size="9" text-anchor="middle">Colonia</text>
+    <text x="60" y="58" fill="#a89ec8" font-size="8" text-anchor="middle">s. XV</text>
+    <text x="140" y="58" fill="#a89ec8" font-size="8" text-anchor="middle">s. XVI</text>
+    <text x="220" y="58" fill="#a89ec8" font-size="8" text-anchor="middle">s. XVII</text>
+  </svg>` },
+  ciencias: { dino:'🔬', texto:'Ciclo de la vida', diagrama:`<svg viewBox="0 0 200 160" style="width:100%;max-width:200px;margin:8px auto;display:block;">
+    <circle cx="100" cy="80" r="60" fill="none" stroke="#4ecb8d" stroke-width="1.5" stroke-dasharray="5,3"/>
+    <text x="100" y="30" fill="#4ecb8d" font-size="11" text-anchor="middle">🌱 Nacer</text>
+    <text x="168" y="85" fill="#ffd166" font-size="11" text-anchor="middle">🦕 Crecer</text>
+    <text x="100" y="148" fill="#ff9eb5" font-size="11" text-anchor="middle">🦴 Fósil</text>
+    <text x="30" y="85" fill="#a08fef" font-size="11" text-anchor="middle">🌋 Cambio</text>
+  </svg>` }
+};
+
+function actualizarVisual(materiaId, respuesta) {
+  const panel = document.getElementById('visual-panel');
+  const dinoEl = document.getElementById('visual-dino');
+  const textEl = document.getElementById('visual-text');
+  const diagEl = document.getElementById('visual-diagram');
+  if(!panel) return;
+  
+  const v = visuales[materiaId] || visuales.ciencias;
+  
+  // Detectar tema específico en la respuesta
+  let visual = v;
+  if(materiaId === 'math') {
+    if(respuesta.toLowerCase().includes('pitágor') || respuesta.toLowerCase().includes('pitagor')) {
+      visual = { ...visuales.math.pitagoras };
+    } else if(respuesta.toLowerCase().includes('función') || respuesta.toLowerCase().includes('funcion') || respuesta.toLowerCase().includes('lineal')) {
+      visual = { ...visuales.math.funcion };
+    } else {
+      visual = { dino: '📐', texto: 'Concepto matemático', diagrama: visuales.math.pitagoras.diagrama };
+    }
+  }
+  
+  dinoEl.textContent = visual.dino || '🦕';
+  textEl.textContent = visual.texto || 'Visualizando...';
+  diagEl.innerHTML = visual.diagrama || '';
+}
+
+// ═══ CELEBRACIÓN AL COMPLETAR BLOQUE ═══
+function celebrar(nombre) {
+  const div = document.createElement('div');
+  div.className = 'celebrate';
+  div.innerHTML = `<div class="celebrate-box">
+    <div style="font-size:56px;margin-bottom:8px;">🏆</div>
+    <div style="font-family:'Fredoka One',sans-serif;font-size:22px;color:var(--green);margin-bottom:6px;">¡Lo lograste!</div>
+    <div style="font-size:14px;color:var(--text2);">${nombre} completado. ¡Catalina eres increíble!</div>
+  </div>`;
+  document.body.appendChild(div);
+  setTimeout(()=>div.remove(), 3000);
+}
+
+
+// ═══ BINAURAL BEATS + RUIDO BLANCO ═══
+let audioCtx = null;
+let binauralNodes = {};
+let binauralActivo = true;
+let ultimoMailBinaural = null;
+let ultimoReporteSemanal = null;
+
+function iniciarAudioCtx() {
+  if(!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function iniciarBinaural() {
+  if(!binauralActivo) return;
+  try {
+    iniciarAudioCtx();
+    detenerBinaural();
+
+    // Ruido blanco suave (fondo)
+    const bufferSize = audioCtx.sampleRate * 2;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * 0.03;
+    const whiteNoise = audioCtx.createBufferSource();
+    whiteNoise.buffer = buffer;
+    whiteNoise.loop = true;
+    const gainNoise = audioCtx.createGain();
+    gainNoise.gain.value = 0.04; // muy sutil
+    whiteNoise.connect(gainNoise);
+    gainNoise.connect(audioCtx.destination);
+    whiteNoise.start();
+    binauralNodes.noise = whiteNoise;
+    binauralNodes.gainNoise = gainNoise;
+
+    // Onda beta 18 Hz — oído izquierdo 200 Hz, derecho 218 Hz
+    const merger = audioCtx.createChannelMerger(2);
+    const oscL = audioCtx.createOscillator();
+    const oscR = audioCtx.createOscillator();
+    oscL.frequency.value = 200;
+    oscR.frequency.value = 218;
+    oscL.type = 'sine';
+    oscR.type = 'sine';
+    const gainL = audioCtx.createGain();
+    const gainR = audioCtx.createGain();
+    gainL.gain.value = 0.02;
+    gainR.gain.value = 0.02;
+    oscL.connect(gainL);
+    oscR.connect(gainR);
+    gainL.connect(merger, 0, 0);
+    gainR.connect(merger, 0, 1);
+    merger.connect(audioCtx.destination);
+    oscL.start();
+    oscR.start();
+    binauralNodes.oscL = oscL;
+    binauralNodes.oscR = oscR;
+    binauralNodes.merger = merger;
+
+    console.log('🎵 Binaural beats activos (18 Hz beta + ruido blanco)');
+  } catch(e) {
+    console.log('Audio no disponible:', e.message);
+  }
+}
+
+function detenerBinaural() {
+  try {
+    if(binauralNodes.noise) { binauralNodes.noise.stop(); }
+    if(binauralNodes.oscL) { binauralNodes.oscL.stop(); }
+    if(binauralNodes.oscR) { binauralNodes.oscR.stop(); }
+  } catch(e) {}
+  binauralNodes = {};
+}
+
+function toggleBinaural(activar) {
+  binauralActivo = activar;
+  if(activar) {
+    iniciarBinaural();
+    notif('🎵 Modo concentración activado');
+    localStorage.setItem('catalina_binaural', 'true');
+  } else {
+    detenerBinaural();
+    localStorage.setItem('catalina_binaural', 'false');
+    notif('🔇 Modo concentración desactivado');
+    // Avisar a papá — máximo 1 vez por día
+    const hoy = new Date().toDateString();
+    if(ultimoMailBinaural !== hoy) {
+      ultimoMailBinaural = hoy;
+      enviarMailBinaural();
+    }
+  }
+}
+
+async function enviarMailBinaural() {
+  const ahora = new Date().toLocaleString('es-CL');
+  const msg = 'AVISO: Catalina desactivó el modo concentración (binaural beats)\n'
+    + 'Fecha y hora: ' + ahora + '\n'
+    + 'El modo ha sido bloqueado hasta que tú lo reactives desde el panel del tutor.\n'
+    + '\nEste es un aviso automático de la Plataforma de Catalina.';
+  try {
+    await emailjs.send('service_6tb2das', 'template_y4c0aas', {
+      to_email: 'dapikanzi@hotmail.com',
+      subject: '[CATALINA] Modo concentración desactivado — ' + new Date().toLocaleDateString('es-CL'),
+      message: msg
+    });
+    console.log('✅ Mail enviado a papá');
+  } catch(e) { console.log('Mail pendiente'); }
+}
+
+// ═══ REPORTE SEMANAL AUTOMÁTICO ═══
+function verificarReporteSemanal() {
+  const ultima = localStorage.getItem('catalina_ultimo_reporte');
+  const ahora = Date.now();
+  const unaSemana = 7 * 24 * 60 * 60 * 1000;
+  if(!ultima || (ahora - parseInt(ultima)) > unaSemana) {
+    enviarReporteSemanal();
+    localStorage.setItem('catalina_ultimo_reporte', ahora.toString());
+  }
+}
+
+async function enviarReporteSemanal() {
+  const sesiones = parseInt(localStorage.getItem('catalina_sesiones_semana') || '0');
+  const minutos = parseInt(localStorage.getItem('catalina_minutos_semana') || '0');
+  const bloques = JSON.parse(localStorage.getItem('catalina_bloques_completados') || '[]');
+  const binaural = localStorage.getItem('catalina_binaural') !== 'false' ? 'Activo' : 'Desactivado';
+  
+  const msg = 'REPORTE SEMANAL — PLATAFORMA DE CATALINA\n'
+    + '══════════════════════════════\n'
+    + 'Período: semana del ' + new Date().toLocaleDateString('es-CL') + '\n'
+    + '\n📊 ACTIVIDAD:\n'
+    + '• Sesiones completadas: ' + sesiones + '\n'
+    + '• Tiempo total de estudio: ' + minutos + ' minutos\n'
+    + '• Bloques completados: ' + (bloques.join(', ') || 'Ninguno aún') + '\n'
+    + '\n🎵 MODO CONCENTRACIÓN: ' + binaural + '\n'
+    + '\n💜 Catalina está trabajando. ¡Sigue apoyándola!\n'
+    + '\nEnviado automáticamente cada lunes por la Plataforma de Catalina.';
+  
+  try {
+    await emailjs.send('service_6tb2das', 'template_y4c0aas', {
+      to_email: 'dapikanzi@hotmail.com',
+      subject: '[CATALINA] Reporte semanal — ' + new Date().toLocaleDateString('es-CL'),
+      message: msg
+    });
+    // Reset contadores semanales
+    localStorage.setItem('catalina_sesiones_semana', '0');
+    localStorage.setItem('catalina_minutos_semana', '0');
+    localStorage.setItem('catalina_bloques_completados', '[]');
+    console.log('✅ Reporte semanal enviado');
+  } catch(e) { console.log('Reporte pendiente'); }
+}
+
+// ═══ REGISTRAR ACTIVIDAD ═══
+function registrarSesion(minutosEstudio) {
+  const sesiones = parseInt(localStorage.getItem('catalina_sesiones_semana') || '0');
+  const minutos = parseInt(localStorage.getItem('catalina_minutos_semana') || '0');
+  localStorage.setItem('catalina_sesiones_semana', (sesiones + 1).toString());
+  localStorage.setItem('catalina_minutos_semana', (minutos + minutosEstudio).toString());
+}
+
+function registrarBloqueCompletado(nombre) {
+  const bloques = JSON.parse(localStorage.getItem('catalina_bloques_completados') || '[]');
+  if(!bloques.includes(nombre)) bloques.push(nombre);
+  localStorage.setItem('catalina_bloques_completados', JSON.stringify(bloques));
+}
+
+window.speechSynthesis && window.speechSynthesis.getVoices();
 // Init
 renderBloques();
+// Restaurar preferencia binaural
+const prefBinaural = localStorage.getItem('catalina_binaural');
+if(prefBinaural === 'false') {
+  binauralActivo = false;
+  document.getElementById('btn-binaural') && (document.getElementById('btn-binaural').style.opacity='0.4');
+}
+// Verificar reporte semanal
+setTimeout(verificarReporteSemanal, 3000);
 </script>
 </body>
 </html>
