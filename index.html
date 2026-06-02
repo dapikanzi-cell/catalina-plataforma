@@ -585,6 +585,18 @@ input[type=range]{flex:1;accent-color:var(--p2);}
   </div>
 </div>
 
+<!-- Modal: configuración API key (solo tutor) -->
+<div class="modal" id="modal-apikey" style="display:none;">
+  <div class="modal-box" style="border-color:rgba(124,111,205,.4);">
+    <span class="modal-emoji">🔑</span>
+    <div class="modal-title">Configurar Profe IA</div>
+    <div class="modal-sub">Ingresa la API key de Anthropic para activar el Profe IA. Solo se hace una vez — se guarda en este dispositivo.<br><br><em style="font-size:11px;color:var(--text3);">Obtenla en platform.claude.com → Claves de API</em></div>
+    <input type="password" id="input-apikey" placeholder="sk-ant-api03-..." style="width:100%;background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--rs);padding:10px 14px;color:var(--text);font-size:13px;font-family:'Nunito',sans-serif;outline:none;margin-bottom:12px;">
+    <button class="btn" onclick="guardarApiKey()" style="margin-bottom:8px;">Guardar y activar ✓</button>
+    <button class="btn-sec" style="width:100%;" onclick="cerrarModal('modal-apikey')">Cancelar</button>
+  </div>
+</div>
+
 </div><!-- /app -->
 
 <div class="nav">
@@ -951,12 +963,13 @@ function renderVisual(materiaId, respText){
 }
 
 function extraerPalabras(txt){
-  if(!txt) return [];
-  const stopwords=new Set(['el','la','los','las','un','una','de','del','en','con','por','que','es','son','una','como','para','este','esta','estos','estas','pero','hay','más','muy','todo','también','puede','entre','sus','esto','cuando']);
+  if(!txt || txt.startsWith('⚠️')) return [];
+  const stop=new Set(['el','la','los','las','un','una','de','del','en','con','por','que','es','son','como','para','este','esta','estos','estas','pero','hay','más','muy','todo','también','puede','entre','sus','esto','cuando','vamos','primero','después','junto','lista','hola','catalina','ahora','bien','clase','tema','explicar','hacer','ejercicio','ejemplo','voy','tengo','tiene','algo','decir','creo','siempre','cada','otras','otros','sobre','authentication','credentials','error','invalid','token','fetch','request','status','server','api','key']);
   return txt.split(/\s+/)
     .map(w=>w.replace(/[^a-záéíóúñ]/gi,'').toLowerCase())
-    .filter(w=>w.length>4 && !stopwords.has(w))
-    .slice(0,5);
+    .filter(w=>w.length>5 && !stop.has(w) && !/^\d+$/.test(w))
+    .filter((w,i,a)=>a.indexOf(w)===i)
+    .slice(0,4);
 }
 
 /* ══════════════════════════════════════════════════════
@@ -1308,24 +1321,52 @@ Bloques completados: ${dias.reduce((a,d)=>a+(state.semana[d].bloques||[]).length
 /* ══════════════════════════════════════════════════════
    LLAMADA CLAUDE API
 ══════════════════════════════════════════════════════ */
+function getApiKey(){
+  return localStorage.getItem('cat_apikey')||'';
+}
+
 async function llamarIA(messages,system,cb){
+  const K=getApiKey();
+  if(!K){ mostrarConfigKey(); cb=null; return; }
   const typing=addMsgTyping();
   try{
     const r=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{
         'Content-Type':'application/json',
-        'x-api-key':'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',
+        'x-api-key':K,
         'anthropic-version':'2023-06-01',
         'anthropic-dangerous-direct-browser-access':'true'
       },
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:700,system,messages})
     });
     const d=await r.json();
-    if(d.error) throw new Error(d.error.message);
+    if(d.error){
+      typing.remove();
+      if(d.error.type==='authentication_error'){
+        localStorage.removeItem('cat_apikey');
+        mostrarConfigKey();
+      } else {
+        cb('⚠️ Error: '+d.error.message);
+      }
+      return;
+    }
     typing.remove();
     cb(d.content?.[0]?.text||'Perdona, no pude responder ahora.');
   }catch(e){typing.remove(); cb('⚠️ '+e.message);}
+}
+
+function mostrarConfigKey(){
+  document.getElementById('modal-apikey').style.display='flex';
+}
+
+function guardarApiKey(){
+  const v=document.getElementById('input-apikey').value.trim();
+  if(!v){ notif('⚠️ Debes ingresar la API key','warn'); return; }
+  localStorage.setItem('cat_apikey', v);
+  document.getElementById('modal-apikey').style.display='none';
+  document.getElementById('input-apikey').value='';
+  notif('✅ API key guardada. ¡Ya puedes usar el Profe IA!');
 }
 
 /* ══════════════════════════════════════════════════════
