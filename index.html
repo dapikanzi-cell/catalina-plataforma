@@ -602,14 +602,8 @@ function setMood(el, emoji, label, nivel, tip){
   state.mood=label; state.moodEmoji=emoji; state.moodNivel=nivel;
   state.log.estadoAnimico=emoji+' '+label;
   document.getElementById('mood-tip').innerHTML=`<strong style="color:var(--purple2)">🤖 Profe IA:</strong> ${tip}`;
-  // Habilitar botón: si hay key guardada O si el campo tiene algo
-  const keyInput = document.getElementById('apikey-input');
-  const keyVal = keyInput ? keyInput.value.trim() : '';
-  const keyOk = API_KEY.length > 10 || keyVal.startsWith('sk-ant');
-  document.getElementById('btn-iniciar').disabled = !keyOk;
-  if(!keyOk){
-    notif('🔑 Ingresa la API Key primero', 'alerta');
-  }
+  // Habilitar botón siempre al seleccionar ánimo
+  document.getElementById('btn-iniciar').disabled = false;
   document.getElementById('av-bloques').textContent=emoji;
   document.getElementById('blq-greeting').textContent=`¡Hola, Catalina! ${emoji}`;
   // Ajuste dinámico de duración según ánimo
