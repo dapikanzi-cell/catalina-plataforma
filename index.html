@@ -409,6 +409,7 @@ const TUTOR_EMAIL = "dapikanzi@hotmail.com";
 const TUTOR_EMAIL2 = "margarita2883@gmail.com";
 
 let API_KEY = localStorage.getItem('cat_api_key') || '';
+if(API_KEY) console.log('API Key cargada desde localStorage ✅');
 
 try { emailjs.init(EMAIL_KEY); } catch(e){}
 
@@ -580,8 +581,15 @@ function toggleApiKeyVisible(){
 
 // ══ INICIO SESIÓN ══
 function iniciarSesion(){
-  verificarApiKey();
-  if(!API_KEY){ notif('⚠️ Se necesita la API Key para comenzar','alerta'); return; }
+  // Intentar obtener key del campo visible si no está en memoria
+  if(!API_KEY){
+    const inp = document.getElementById('apikey-input');
+    if(inp && inp.value.trim().startsWith('sk-ant')){
+      API_KEY = inp.value.trim();
+      localStorage.setItem('cat_api_key', API_KEY);
+    }
+  }
+  if(!API_KEY){ notif('⚠️ Ingresa la API Key arriba para comenzar','alerta'); return; }
   state.sesionActiva=true;
   iniciarRelojSesion();
   goTo('s-bloques');
@@ -594,7 +602,14 @@ function setMood(el, emoji, label, nivel, tip){
   state.mood=label; state.moodEmoji=emoji; state.moodNivel=nivel;
   state.log.estadoAnimico=emoji+' '+label;
   document.getElementById('mood-tip').innerHTML=`<strong style="color:var(--purple2)">🤖 Profe IA:</strong> ${tip}`;
-  if(API_KEY || document.getElementById('apikey-input').value.startsWith('sk-ant')) document.getElementById('btn-iniciar').disabled=false;
+  // Habilitar botón: si hay key guardada O si el campo tiene algo
+  const keyInput = document.getElementById('apikey-input');
+  const keyVal = keyInput ? keyInput.value.trim() : '';
+  const keyOk = API_KEY.length > 10 || keyVal.startsWith('sk-ant');
+  document.getElementById('btn-iniciar').disabled = !keyOk;
+  if(!keyOk){
+    notif('🔑 Ingresa la API Key primero', 'alerta');
+  }
   document.getElementById('av-bloques').textContent=emoji;
   document.getElementById('blq-greeting').textContent=`¡Hola, Catalina! ${emoji}`;
   // Ajuste dinámico de duración según ánimo
@@ -1078,7 +1093,8 @@ function notif(msg, tipo=''){
     const inp = document.getElementById('apikey-input');
     if(inp){ inp.value = stored; }
     const status = document.getElementById('apikey-status');
-    if(status){ status.textContent='✅ Key guardada de sesión anterior'; status.style.color='var(--green)'; }
+    if(status){ status.textContent='✅ Key guardada — selecciona tu ánimo para comenzar'; status.style.color='var(--green)'; }
+    // Si hay key, el botón se activa en cuanto seleccione ánimo — ya no necesita validación extra
   }
 })();
 renderBloques();
