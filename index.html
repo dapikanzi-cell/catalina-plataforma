@@ -1055,8 +1055,8 @@ function detectarVideoRelevante(texto, materiaId) {
   return null;
 }
 
-// Mostrar video en el chat de clase
-function mostrarVideoEnClase(video) {
+// Mostrar video — activado por el profe IA con [[VIDEO:tema]]
+function mostrarVideoEnClase(video, contextoExplicacion) {
   if(!video) return;
   const chat = document.getElementById('chat');
   
@@ -1070,7 +1070,7 @@ function mostrarVideoEnClase(video) {
   div.innerHTML = `
     <div class="video-header">
       <span class="video-icon">🎬</span>
-      <span class="video-label">Video del Profe IA</span>
+      <span class="video-label">El profe IA te muestra</span>
     </div>
     <div class="video-title">${video.titulo}</div>
     <div class="video-desc">${video.desc}</div>
@@ -1138,9 +1138,7 @@ function iniciarClase(bloque){
 INSTRUCCIÓN: Empieza la clase de ${bloque.name} YA. Elige el tema más importante del programa, explícalo en 3-4 oraciones con un ejemplo relacionado a dinosaurios o geología, y termina con UNA pregunta corta para saber si entendí. No me preguntes por dónde empezar — tú decides.`;
   llamarIA([{role:'user',content:primerMensaje}], sistemaAdaptado, (resp)=>{
     agregarMsg('profe', resp);
-    // Video de bienvenida al tema
-    const videoInicio = detectarVideoRelevante(bloque.sistema.slice(0,300), bloque.id);
-    if(videoInicio) setTimeout(()=>mostrarVideoEnClase(videoInicio), 1200);
+    // El profe IA usará [[VIDEO:tema]] cuando lo necesite
     document.getElementById('clase-fill').style.width='20%';
     document.getElementById('clase-progreso').textContent='Explicando...';
     document.getElementById('profe-estado').textContent='Explicando el tema';
@@ -1164,7 +1162,11 @@ function construirSistemaAdaptado(bloque){
   if(state.moodNivel>=4) ajuste='IMPORTANTE: hoy Catalina está cansada/difícil. Sesión muy corta (máx 15 min), 1 tema simple, muchos refuerzos positivos, nada de ejercicios difíciles.';
   else if(state.moodNivel===3) ajuste='Hoy Catalina está regular. Actividades visuales, ejemplos concretos, pausa si la notas dispersa.';
   else ajuste='Catalina está bien hoy. Puedes desarrollar el tema con normalidad.';
-  return bloque.sistema + ' AJUSTE DE SESIÓN: ' + ajuste;
+
+  // Instrucción para usar material de apoyo — el profe dirige, el material apoya
+  const instruccionMaterial = ` USO DE MATERIAL: Cuando acabes de explicar un concepto clave y creas que un video ayudaría a Catalina a visualizarlo mejor, escribe [[VIDEO:tema]] en tu respuesta (por ejemplo [[VIDEO:pendiente]] o [[VIDEO:célula]]). Hazlo DESPUÉS de tu explicación, no antes. No uses el tag en cada mensaje, solo cuando realmente ayude a visualizar algo complejo. Los temas disponibles son: ${Object.keys(VIDEOS[bloque.id]||{}).join(', ')}.`;
+
+  return bloque.sistema + ' AJUSTE DE SESIÓN: ' + ajuste + instruccionMaterial;
 }
 
 function mostrarLimite45(){
@@ -1205,12 +1207,11 @@ function enviar(){
   const sistemaAdaptado=construirSistemaAdaptado(state.claseActual);
   llamarIA(state.chatHistory, sistemaAdaptado, (resp)=>{
     state.chatHistory.push({role:'assistant',content:resp});
-    agregarMsg('profe', resp);
-    // Detectar y mostrar video relevante
-    if(state.claseActual) {
-      const video = detectarVideoRelevante(resp, state.claseActual.id);
-      if(video) setTimeout(()=>mostrarVideoEnClase(video), 800);
-    }
+    // Limpiar tags [[VIDEO:...]] del texto visible — el video se muestra aparte
+    const respVisible = resp.replace(/\[\[VIDEO:[^\]]+\]\]/gi,'').trim();
+    agregarMsg('profe', respVisible);
+    // Procesar [[VIDEO:tema]] si el profe decide mostrar material
+    if(state.claseActual) procesarRespuestaProfe(resp, state.claseActual.id);
     if(resp.includes('[[BLOQUE_COMPLETADO]]')){
       setTimeout(()=>completarBloque(state.claseActual.id), 1000);
     }
@@ -1265,7 +1266,9 @@ function paleoPregunta(){
   const sistema=`Eres el Profe IA de Paleontología de Catalina, 14 años, apasionada por dinosaurios y geología. Esta es su zona de recompensa — sin presión. REGLAS: entusiasmo, datos fascinantes, conecta con geología, emojis con moderación, español neutro, máx 4 oraciones, sugiere preguntas de seguimiento. RECURSO DISPONIBLE: cuando Catalina pregunte sobre tipos o clasificación de dinosaurios, menciona la guía ilustrada de la UNAM en https://www.revista.unam.mx/vol.2/num4/sabias1/tipos.html — tiene 25 especies con imágenes clasificadas en Saurisquios (cadera de lagarto) y Ornitisquios (cadera de ave).`;
   llamarIA(state.paleoHistory, sistema, (resp)=>{
     state.paleoHistory.push({role:'assistant',content:resp});
-    agregarMsgPaleo('profe',resp);
+    // Limpiar tags [[VIDEO:...]] del texto visible en paleo
+    const respLimpia = resp.replace(/\[\[VIDEO:[^\]]+\]\]/gi,'').trim();
+    agregarMsgPaleo('profe', respLimpia);
   });
 }
 
@@ -1317,6 +1320,39 @@ async function llamarIADirecta(messages, system){
     const data=await res.json();
     return data.content?.[0]?.text||'';
   } catch(e){ return ''; }
+}
+
+// ══ PROCESADOR DE RESPUESTAS DEL PROFE IA ══
+// El profe puede escribir [[VIDEO:tema]] para mostrar un video como parte de su explicación
+// Ejemplo: "La pendiente mide la inclinación. [[VIDEO:pendiente]] Mira este video donde lo ves visualmente."
+function procesarRespuestaProfe(resp, materiaId) {
+  const tagRegex = /\[\[VIDEO:([^\]]+)\]\]/gi;
+  const tags = [...resp.matchAll(tagRegex)];
+  
+  if(tags.length === 0) return; // Sin videos — nada que hacer
+  
+  tags.forEach(match => {
+    const temaVideo = match[1].trim().toLowerCase();
+    const vids = VIDEOS[materiaId];
+    if(!vids) return;
+    
+    // Buscar el video por nombre de tema (coincidencia parcial)
+    let video = null;
+    for(const [key, val] of Object.entries(vids)) {
+      if(key.includes(temaVideo) || temaVideo.includes(key.split(' ')[0])) {
+        video = val;
+        break;
+      }
+    }
+    if(!video) return;
+    
+    // Extraer el texto que el profe escribió antes del tag como contexto
+    const posTag = resp.indexOf(match[0]);
+    const textoAntes = resp.substring(Math.max(0, posTag - 120), posTag).trim();
+    const contexto = textoAntes.length > 20 ? textoAntes : video.desc;
+    
+    setTimeout(() => mostrarVideoEnClase(video, contexto), 600);
+  });
 }
 
 // ══ HELPERS CHAT ══
