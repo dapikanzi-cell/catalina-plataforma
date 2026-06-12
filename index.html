@@ -90,16 +90,12 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
 .paleo-hero{text-align:center;padding:20px 0 10px;}
 .paleo-title{font-family:'Fredoka One',sans-serif;font-size:28px;color:var(--green);margin-bottom:6px;}
 .paleo-sub{font-size:14px;color:var(--text3);margin-bottom:20px;}
-.paleo-content{background:linear-gradient(135deg,#0a1f14,#061510);border:1px solid rgba(78,203,141,0.2);border-radius:var(--r);padding:18px;margin-bottom:12px;}
+
 .fact-card{background:rgba(78,203,141,0.06);border:1px solid rgba(78,203,141,0.15);border-radius:var(--rs);padding:14px;margin-bottom:10px;}
 .fact-emoji{font-size:28px;margin-bottom:6px;display:block;}
 .fact-title{font-size:15px;font-weight:700;color:var(--green);margin-bottom:4px;}
 .fact-text{font-size:13px;color:var(--text2);line-height:1.6;}
-/* QUIZ */
-.qopt{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--rs);margin-bottom:8px;cursor:pointer;font-size:13px;color:var(--text2);transition:all 0.15s;}
-.qopt:hover{border-color:var(--purple);color:var(--text);}
-.qopt.correct{border-color:var(--green);background:rgba(78,203,141,0.1);color:var(--green);}
-.qopt.wrong{border-color:var(--red);background:rgba(255,107,107,0.1);color:var(--red);}
+
 /* PONY */
 .pony-tip{display:flex;align-items:flex-start;gap:10px;background:rgba(255,158,181,0.06);border:1px solid rgba(255,158,181,0.15);border-radius:var(--rs);padding:10px 12px;margin-bottom:10px;font-size:13px;color:var(--text2);}
 /* NAV */
@@ -127,14 +123,22 @@ input[type=range]{flex:1;accent-color:var(--purple2);}
 .test-opt{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--rs);margin-bottom:8px;cursor:pointer;font-size:13px;color:var(--text2);transition:all 0.15s;}
 .test-opt:hover{border-color:var(--purple);color:var(--text);}
 .test-opt.sel{border-color:var(--purple2);background:rgba(124,111,205,0.15);color:var(--text);}
-/* STATS */
-.stat-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;}
-.stat-row:last-child{border-bottom:none;}
-.stat-lbl{color:var(--text3);}
-.stat-val{font-weight:700;color:var(--purple2);}
+
 /* BLOQUEO NAVEGACION */
 #overlay-bloqueo{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:99999;align-items:center;justify-content:center;padding:20px;}
 #overlay-bloqueo .ob-box{background:var(--bg2);border:2px solid var(--red);border-radius:var(--r);padding:28px;max-width:360px;text-align:center;}
+
+/* SISTEMA DE VIDEOS */
+.video-sugerido{background:linear-gradient(135deg,#0d1a0d,#071007);border:1px solid rgba(78,203,141,0.25);border-radius:var(--rs);padding:12px;margin-top:10px;animation:fu 0.4s ease;}
+.video-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.video-icon{font-size:18px;}
+.video-label{font-size:11px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:0.06em;}
+.video-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.video-desc{font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.5;}
+.video-embed{position:relative;width:100%;padding-bottom:56.25%;border-radius:8px;overflow:hidden;background:#000;}
+.video-embed iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none;}
+.video-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;}
+.video-tag{font-size:10px;padding:2px 8px;border-radius:20px;background:rgba(78,203,141,0.08);color:var(--green);border:1px solid rgba(78,203,141,0.15);}
 </style>
 </head>
 <body>
@@ -363,7 +367,7 @@ input[type=range]{flex:1;accent-color:var(--purple2);}
   <div class="modal-box">
     <div class="modal-emoji">⏰</div>
     <div class="modal-title">¿Seguimos aprendiendo?</div>
-    <div class="modal-sub">Llevas 30 minutos estudiando. ¡Lo estás haciendo genial! ¿Qué quieres hacer?</div>
+    <div class="modal-sub" id="modal-continuar-texto">Llevas un rato estudiando. ¡Lo estás haciendo genial! ¿Qué quieres hacer?</div>
     <button class="btn" style="margin-bottom:8px;" onclick="continuarSesion()">¡Sigo aprendiendo! 💪</button>
     <button class="btn-sec" style="width:100%;margin-bottom:8px;" onclick="mostrarModalPausa()">Necesito una pausa</button>
     <button class="btn-red" style="width:100%;" onclick="mostrarTestFin()">Terminar sesión de hoy</button>
@@ -409,7 +413,6 @@ const TUTOR_EMAIL = "dapikanzi@hotmail.com";
 const TUTOR_EMAIL2 = "margarita2883@gmail.com";
 
 let API_KEY = localStorage.getItem('cat_api_key') || '';
-if(API_KEY) console.log('API Key cargada desde localStorage ✅');
 
 try { emailjs.init(EMAIL_KEY); } catch(e){}
 
@@ -442,6 +445,11 @@ function guardarEstadistica() {
     testFin: state.log.testFin,
     alertas: state.log.alertas
   });
+  // Limpiar semanas antiguas (conservar solo las últimas 8 semanas)
+  const semanas = Object.keys(hist).sort();
+  if(semanas.length > 8) {
+    semanas.slice(0, semanas.length-8).forEach(s=>delete hist[s]);
+  }
   localStorage.setItem('cat_hist', JSON.stringify(hist));
 }
 
@@ -459,10 +467,18 @@ function verificarReporteDominical() {
       localStorage.setItem(clave,'1');
       setTimeout(()=>enviarReporteWeekly(),3000);
     }
+    // Limpiar claves cat_rep_ antiguas (conservar solo las últimas 8 semanas)
+    try {
+      const keys = Object.keys(localStorage).filter(k=>k.startsWith('cat_rep_'));
+      if(keys.length > 8) {
+        keys.sort().slice(0, keys.length-8).forEach(k=>localStorage.removeItem(k));
+      }
+    } catch(e){}
   }
 }
 
 async function enviarReporteWeekly() {
+  try {
   const semana=obtenerSemana();
   const hist=JSON.parse(localStorage.getItem('cat_hist')||'{}');
   const datos=hist[semana]||[];
@@ -477,14 +493,14 @@ Estados de ánimo: ${estados}
 Materias trabajadas: ${materias}
 Alertas: ${datos.flatMap(d=>d.alertas||[]).length} en total`;
   await enviarEmail('Reporte semanal '+semana, cuerpo, [TUTOR_EMAIL, TUTOR_EMAIL2]);
+  } catch(e){ console.log('Error reporte semanal:',e); }
 }
 
 // ══ BLOQUEO DE NAVEGACIÓN EXTERNA ══
 (function bloqueoNavegacion(){
   // Bloquear popups
-  const _open = window.open;
-  window.open.__original = _open;
-  const URLS_PERMITIDAS = ['fishersci.es/es/es/periodic-table.html','revista.unam.mx/vol.2/num4/sabias1/tipos.html','epja.mineduc.cl/wp-content/uploads/sites/43/2019/06/','es.slideshare.net/slideshow/ppt-transformacionesisometricasgeometria8basicoayb'];
+  const _open = window.open.bind(window);
+  const URLS_PERMITIDAS = ['youtube.com/embed','youtube.com/watch','youtu.be','fishersci.es/es/es/periodic-table.html','revista.unam.mx/vol.2/num4/sabias1/tipos.html','epja.mineduc.cl/wp-content/uploads/sites/43/2019/06/','es.slideshare.net/slideshow/ppt-transformacionesisometricasgeometria8basicoayb'];
   window.open = function(url, ...args){
     if(url && !url.includes(location.hostname)){
       const permitida = URLS_PERMITIDAS.some(u=>url.includes(u));
@@ -521,6 +537,7 @@ function mostrarBloqueNavegacion(url){
 }
 
 async function reportarIntento(detalle){
+  try {
   state.log.alertas.push(detalle+' @ '+new Date().toLocaleTimeString('es-CL'));
   const cuerpo=`⚠️ ALERTA DE SEGURIDAD — Plataforma Catalina
 Fecha: ${new Date().toLocaleString('es-CL')}
@@ -528,6 +545,7 @@ Detalle: ${detalle}
 Materia activa: ${state.claseActual?.name||'ninguna'}
 Ánimo: ${state.log.estadoAnimico||'N/A'}`;
   await enviarEmail('🚨 ALERTA navegación Catalina', cuerpo, [TUTOR_EMAIL]);
+  } catch(e){ console.log('Error alerta:',e); }
 }
 
 // ══ ESTRELLAS ══
@@ -551,11 +569,6 @@ function goTo(id){
 }
 
 // ══ API KEY ══
-function verificarApiKey(){
-  // La key ya se captura desde el campo visible — solo verificar
-  const stored = localStorage.getItem('cat_api_key');
-  if(stored) API_KEY = stored;
-}
 function guardarApiKey(val){
   val = val.trim();
   const status = document.getElementById('apikey-status');
@@ -581,15 +594,17 @@ function toggleApiKeyVisible(){
 
 // ══ INICIO SESIÓN ══
 function iniciarSesion(){
-  // Intentar obtener key del campo visible si no está en memoria
-  if(!API_KEY){
-    const inp = document.getElementById('apikey-input');
-    if(inp && inp.value.trim().startsWith('sk-ant')){
-      API_KEY = inp.value.trim();
-      localStorage.setItem('cat_api_key', API_KEY);
-    }
+  // Leer key del campo visible O del localStorage — en ese orden
+  const inp = document.getElementById('apikey-input');
+  const keyFromField = inp ? inp.value.trim() : '';
+  const keyFromStorage = localStorage.getItem('cat_api_key') || '';
+  if(keyFromField.length > 10) {
+    API_KEY = keyFromField;
+  } else if(keyFromStorage.length > 10) {
+    API_KEY = keyFromStorage;
+    if(inp) inp.value = API_KEY; // restaurar al campo
   }
-  if(!API_KEY){ notif('⚠️ Ingresa la API Key arriba para comenzar','alerta'); return; }
+  if(!API_KEY || API_KEY.length < 10){ notif('⚠️ Ingresa la API Key arriba para comenzar','alerta'); return; }
   state.sesionActiva=true;
   iniciarRelojSesion();
   goTo('s-bloques');
@@ -659,6 +674,9 @@ function terminarPausa(){
 
 // ══ MODAL CONTINUAR ══
 function mostrarModalContinuar(){
+  const mins = Math.floor(state.sesionSecs/60);
+  const el = document.getElementById('modal-continuar-texto');
+  if(el) el.textContent = `Llevas ${mins} minutos estudiando. ¡Lo estás haciendo genial! ¿Qué quieres hacer?`;
   document.getElementById('modal-continuar').style.display='flex';
 }
 function continuarSesion(){
@@ -666,10 +684,7 @@ function continuarSesion(){
   state.minutosAlert+=30;
   notif('¡Excelente, Catalina! Seguimos aprendiendo 💪');
 }
-function pausarSesion(){
-  document.getElementById('modal-continuar').style.display='none';
-  mostrarModalPausa();
-}
+
 
 // ══ TEST FIN DE SESIÓN ══
 const testPreguntas=[
@@ -746,6 +761,8 @@ ${analisis}`;
 
 function reiniciarSesion(){
   if(sesionInterval){ clearInterval(sesionInterval); sesionInterval=null; }
+  if(claseInterval){ clearInterval(claseInterval); claseInterval=null; }
+  if(state.pausaInterval){ clearInterval(state.pausaInterval); state.pausaInterval=null; }
   state={...state, mood:'', moodEmoji:'😊', moodNivel:3, concentracion:3, energia:3,
     bloques:{math:false,lengua:false,historia:false,ciencias:false},
     paleoBloqueada:true, sesionSecs:0, claseSecs:0,
@@ -760,14 +777,14 @@ function reiniciarSesion(){
 const bloquesConfig=[
   { id:'math', icon:'📐', name:'Matemáticas', desc:'Funciones lineales, geometría y transformaciones isométricas', pony:'Twilight Sparkle',
     recurso_geometria:'https://epja.mineduc.cl/wp-content/uploads/sites/43/2019/06/Gu%C3%ADa-N%C2%B0-5-Matem%C3%A1tica-Geometr%C3%ADa.pdf',
-    sistema:`Eres el Profe IA de Catalina, 14 años, TDAH combinado + TEA, 8° básico Chile. REGLAS: 1) Explica con ejemplos de GEOLOGÍA o PALEONTOLOGÍA (ej: la velocidad de deposición de sedimentos = función lineal; escala en mapa geológico; pendiente de un estrato de roca). 2) Frases cortas. Una idea a la vez. 3) Después de explicar, haz UN ejercicio. 4) Si no entiende, cambia estrategia. 5) Detecta desánimo y ajusta. 6) NUNCA inventes. 7) Máx 4 oraciones por respuesta. FUNCIÓN LINEAL Y AFÍN (Guía Mineduc 4): Función f(x) = relación entre variables (independiente x, dependiente f(x)). Dominio = valores posibles de x; Recorrido = resultados posibles. Lineal: f(x)=mx (pasa por origen). Afín: f(x)=mx+n (n = coeficiente de posición = donde corta eje y). Tabla de valores: elegir x, evaluar, obtener pares ordenados. Gráfica: ubicar puntos en plano cartesiano y unir con recta. Pendiente m=(y2-y1)/(x2-x1); m>0 creciente, m<0 decreciente. Paralelas: m1=m2. Perpendiculares: m1×m2=-1. Ecuación 2 puntos: f(x)=[(y2-y1)/(x2-x1)](x-x1)+y1. Punto-pendiente: f(x)-y1=m(x-x1). Ángulos: agudo 0-90°, recto 90°, obtuso 90-180°, extendido 180°. GEOMETRÍA (Guía Mineduc 5): Polígonos: triángulo, cuadrilátero, pentágono, hexágono (regulares/irregulares). Fórmulas: cuadrado P=4a A=a², rectángulo P=2a+2b A=a×b, triángulo A=(base×h)/2, círculo P=2πr A=πr². Semejanza: criterios LLL, AA, LAL, LLA. Teorema de Thales. Isometrías: TRASLACIÓN P(x,y) con vector T(a,b) → P'(x+a, y+b). ROTACIÓN respecto al origen: 90°→(-y,x), 180°→(-x,-y), 270°→(y,-x), 360°→(x,y); rotación positiva=antihorario. SIMETRÍA AXIAL: reflexión respecto a eje, AA' perpendicular al eje, AM=MA'. SIMETRÍA CENTRAL: reflexión respecto a punto O, OA=OA'; equivale a rotación 180°. TESELACIONES: cubren el plano sin espacios; solo teselan regularmente triángulo equilátero, cuadrado y hexágono regular. Volumen V=Abase×h. RECURSOS: menciona las guías del Mineduc (función lineal y geometría) disponibles en la plataforma.` }
+    sistema:`Eres el Profe IA de Catalina, 14 años, TDAH combinado + TEA, 8° básico Chile. REGLAS: 1) Explica con ejemplos de GEOLOGÍA o PALEONTOLOGÍA (ej: la velocidad de deposición de sedimentos = función lineal; escala en mapa geológico; pendiente de un estrato de roca; la traslación mueve un fósil en el plano; el yacimiento paleontológico como ejemplo de coordenadas). 2) Frases cortas. Una idea a la vez. 3) Después de explicar, haz UN ejercicio. 4) Si no entiende, cambia estrategia. 5) Detecta desánimo y ajusta. 6) NUNCA inventes. 7) Máx 4 oraciones. 8) Cuando Catalina complete exitosamente el bloque, escribe [[BLOQUE_COMPLETADO]] al final. FUNCIÓN LINEAL Y AFÍN (Guía Mineduc 4): Función f(x) = relación entre variables; la notación f(x) se lee 'f de x'. Caso especial: si m=0 en f(x)=mx+n, la función es CONSTANTE f(x)=n (recta horizontal). Si m=0 en f(x)=mx, la función vale siempre cero. (independiente x, dependiente f(x)). Dominio = valores posibles de x; Recorrido = resultados posibles. Lineal: f(x)=mx (pasa por origen). Afín: f(x)=mx+n (n = coeficiente de posición = donde corta eje y). Tabla de valores: elegir x, evaluar, obtener pares ordenados. Gráfica: ubicar puntos en plano cartesiano y unir con recta. Pendiente m=(y2-y1)/(x2-x1); m>0 creciente, m<0 decreciente. Una recta VERTICAL tiene pendiente indefinida (el denominador x2-x1=0, división por cero imposible). Paralelas: m1=m2. Perpendiculares: m1×m2=-1. Ecuación 2 puntos: f(x)=[(y2-y1)/(x2-x1)](x-x1)+y1. Punto-pendiente: f(x)-y1=m(x-x1). Ángulos: agudo 0-90°, recto 90°, obtuso 90-180°, extendido 180°. GEOMETRÍA (Guía Mineduc 5): Polígonos: triángulo, cuadrilátero, pentágono, hexágono (regulares/irregulares). Fórmulas: cuadrado P=4a A=a², rectángulo P=2a+2b A=a×b, triángulo A=(base×h)/2, círculo P=2πr A=πr². Semejanza de figuras: figuras semejantes tienen lados homólogos proporcionales y ángulos iguales. Criterios LLL, AA, LAL, LLA. Teorema de Thales (recta paralela a un lado del triángulo crea un triángulo semejante con lados proporcionales). Isometrías (mueven y transforman figuras sin cambiar forma ni tamaño: traslación, rotación, simetría): TRASLACIÓN P(x,y) con vector T(a,b) → P'(x+a, y+b). ROTACIÓN respecto al origen: 90°→(-y,x), 180°→(-x,-y), 270°→(y,-x), 360°→(x,y); rotación positiva=antihorario. SIMETRÍA AXIAL: reflexión respecto a eje, AA' perpendicular al eje, AM=MA'. SIMETRÍA CENTRAL: reflexión respecto a punto O, OA=OA'; equivale a rotación 180°. TESELACIONES: cubren el plano sin espacios; solo teselan regularmente triángulo equilátero, cuadrado y hexágono regular. Volumen: prisma/cilindro V=Abase×h; pirámide/cono V=(1/3)×Abase×h. Edad Antigua, Media, Moderna, Contemporánea). RECURSOS: menciona las guías del Mineduc (función lineal y geometría) disponibles en la plataforma.` },
   { id:'lengua', icon:'📖', name:'Lengua y Literatura', desc:'Texto argumentativo y análisis literario', pony:'Rarity',
-    sistema:`Eres el Profe IA de Catalina, 14 años, TDAH+TEA, 8° básico Chile. REGLAS: 1) Ejemplos con textos sobre dinosaurios o naturaleza. 2) Frases cortas. 3) Una actividad breve tras explicar. 4) Si no entiende, cambia estrategia. 5) NUNCA inventes. 6) Máx 4 oraciones por respuesta.` },
+    sistema:`Eres el Profe IA de Lengua y Literatura de Catalina, 14 años, TDAH+TEA, 8° básico Chile. REGLAS: 1) Siempre usa ejemplos con textos sobre dinosaurios, fósiles o naturaleza. 2) Frases cortas. 3) Una actividad breve tras explicar. 4) Si no entiende, cambia estrategia. 5) NUNCA inventes. 6) Máx 4 oraciones. 7) Cuando Catalina complete el bloque, escribe [[BLOQUE_COMPLETADO]] al final. CONTENIDOS 8° BÁSICO: Texto argumentativo (tesis = postura o afirmación que se defiende, NO una pregunta; argumentos, conclusión; el objetivo es argumentar y convencer, a diferencia de narrar una historia; tipos: ensayo, carta al director, artículo de opinión). Análisis literario (narrador, personajes, espacio, tiempo, conflicto, tema, recursos literarios: metáfora (comparación implícita sin 'como': 'el T-Rex era una montaña de dientes'), símil (comparación con 'como': 'rugía como un volcán'), hipérbole (exageración extrema: 'te lo he dicho un millón de veces'), personificación (dar cualidades humanas a objetos o animales)). Comprensión lectora: idea principal (la más importante del texto), inferencia (deducir información implícita no dicha), vocabulario contextual (deducir significado de una palabra por el contexto). Tipos de narrador: primera persona (yo narro y soy personaje), tercera persona omnisciente (sabe todo), tercera persona observador. Conflicto: tensión o problema central que enfrentan los personajes. Clímax: punto de máxima tensión en la narración. Estrofa: conjunto de versos agrupados. Producción escrita (planificación, borrador, revisión, edición). Coherencia textual: las ideas deben seguir un orden lógico y relacionarse entre sí. Conectores textuales: palabras que relacionan ideas (sin embargo, por lo tanto, además, en conclusión). Puntuación: punto (.), coma (,), punto y coma (;), dos puntos (:); dan sentido y pausa al texto. Acentuación: agudas (tilde en última sílaba), graves (en penúltima), esdrújulas (siempre llevan tilde). Tilde diacrítica: algunos monosílabos llevan tilde para distinguir significados: él (pronombre) vs el (artículo), tú (pronombre) vs tu (posesivo), sí (afirmación) vs si (condición). Medios de comunicación: televisión, radio, prensa escrita, internet; informan y entretienen. Publicidad: mensaje persuasivo para convencer a la audiencia de comprar o creer algo. Ortografía y gramática (acentuación, puntuación, conectores). Género lírico (poema: texto en verso, verso = cada línea del poema, estrofa = conjunto de versos agrupados, rima, figuras retóricas). Medios de comunicación y publicidad.` },
   { id:'historia', icon:'🗺️', name:'Historia', desc:'Humanismo, conquista y línea de tiempo geológica', pony:'Applejack',
-    sistema:`Eres el Profe IA de Catalina, 14 años, TDAH+TEA, 8° básico Chile. REGLAS: 1) Conecta historia con descubrimientos geológicos o paleontológicos. 2) Frases cortas. 3) Haz una pregunta después de explicar. 4) Si no entiende, cambia estrategia. 5) NUNCA inventes. 6) Máx 4 oraciones.` },
+    sistema:`Eres el Profe IA de Historia de Catalina, 14 años, TDAH+TEA, 8° básico Chile. REGLAS: 1) Conecta siempre con descubrimientos geológicos o paleontológicos (ej: el Renacimiento y los primeros fósiles estudiados, la conquista y los minerales de América). 2) Frases cortas. 3) Haz una pregunta después de explicar. 4) Si no entiende, cambia estrategia. 5) NUNCA inventes. 6) Máx 4 oraciones. 7) Cuando Catalina complete el bloque, escribe [[BLOQUE_COMPLETADO]] al final. CONTENIDOS 8° BÁSICO: Humanismo y Renacimiento (siglos XIV-XVI; ruptura con el teocentrismo medieval donde Dios era el centro de todo; el antropocentrismo pone al hombre y la razón en el centro; pensadores: Erasmo, Moro, Maquiavelo; arte: Leonardo, Miguel Ángel, Rafael; imprenta de Gutenberg 1440). Reforma y Contrarreforma (Lutero 1517 protestó contra la iglesia católica por la venta de indulgencias; Calvino, Enrique VIII; división entre católicos y protestantes; Concilio de Trento como respuesta). Monarquías absolutas (Luis XIV, Felipe II). Expansión europea y conquista de América (Colón 1492, Cortés, Pizarro). Encomienda: sistema donde el español recibía indígenas para evangelizar a cambio de trabajo forzado. Mita: trabajo obligatorio en minería (especialmente plata en Potosí) impuesto a los indígenas. Resistencia indígena frente a la conquista. Virreinatos y organización colonial. Esclavitud africana. Ilustración (siglo XVIII; la razón y el pensamiento científico reemplazan al dogma). Rousseau: contrato social, soberanía popular, voluntad general. Montesquieu: separación de poderes (ejecutivo, legislativo, judicial). Locke: derechos naturales (vida, libertad, propiedad). Enciclopedistas: base intelectual de las revoluciones. Revoluciones del siglo XVIII (Revolución Francesa 1789: el pueblo contra el rey Luis XVI, lema libertad, igualdad, fraternidad; guillotina, Declaración de Derechos del Hombre; Revolución Americana 1776: las colonias de Estados Unidos se independizaron de Inglaterra; primer estado democrático moderno; causas, etapas, consecuencias). Línea de tiempo histórica: representación cronológica de eventos ordenados. La historia no tiene una sola interpretación correcta: es construcción a partir de fuentes y depende del historiador (historiografía). Periodización: división en épocas y períodos históricos (Prehistoria, Antigüedad, Edad Media, Moderna, Contemporánea).` },
   { id:'ciencias', icon:'🔬', name:'Ciencias Naturales', desc:'Biología, química y geología básica', pony:'Twilight Sparkle',
     recurso_tabla:'https://www.fishersci.es/es/es/periodic-table.html',
-    sistema:`Eres el Profe IA de Catalina, 14 años, TDAH+TEA, 8° básico Chile. REGLAS: 1) Conecta siempre con GEOLOGÍA y PALEONTOLOGÍA. 2) Frases cortas. 3) Actividad breve tras explicar. 4) Si no entiende, cambia estrategia. 5) NUNCA inventes. 6) Máx 4 oraciones. 7) Cuando expliques química o elementos, menciona que puede consultar la Tabla Periódica Interactiva Fisher Scientific en https://www.fishersci.es/es/es/periodic-table.html — tiene los 118 elementos con propiedades, filtros por metales/no metales/estados/grupos y versión imprimible.` }
+    sistema:`Eres el Profe IA de Ciencias Naturales de Catalina, 14 años, TDAH+TEA, 8° básico Chile. REGLAS: 1) Conecta SIEMPRE con GEOLOGÍA y PALEONTOLOGÍA (ej: minerales en huesos fósiles, reacciones químicas en estratos rocosos, biología de dinosaurios). 2) Frases cortas. 3) Actividad breve tras explicar. 4) Si no entiende, cambia estrategia. 5) NUNCA inventes. 6) Máx 4 oraciones. 7) Cuando Catalina complete el bloque, escribe [[BLOQUE_COMPLETADO]] al final. 8) Cuando expliques química o elementos, menciona la Tabla Periódica Interactiva Fisher Scientific en https://www.fishersci.es/es/es/periodic-table.html — 118 elementos con propiedades, filtros por metales/no metales/estados/grupos. CONTENIDOS 8° BÁSICO: BIOLOGÍA: célula = unidad fundamental de los seres vivos y de todo organismo. Partes: membrana (protege y controla entrada/salida), citoplasma (líquido interno), núcleo (contiene ADN), orgánulos. Procariota (sin núcleo definido, ej: bacteria) vs eucariota (con núcleo). Célula animal vs vegetal: la vegetal tiene cloroplastos (fotosíntesis) y pared celular rígida. División celular: mitosis produce 2 células hijas idénticas. Interfase: la célula crece y duplica su ADN en preparación para dividirse. Profase: cromosomas visibles. Metafase: se alinean en el centro. Anafase: se separan hacia polos. Telofase: se forman 2 núcleos. Sistema reproductor humano (masculino y femenino; fecundación, embarazo, parto). Genética: gen = segmento de ADN que determina un carácter (ej: color de ojos); codifica proteínas. Alelos: variantes de un gen (dominante se expresa sobre el recesivo). Leyes de Mendel: herencia de caracteres dominantes y recesivos. Evolución (Darwin, selección natural, adaptación, especiación; evidencias: fósiles, anatomía comparada). Sistema reproductor: fecundación = unión del óvulo (célula sexual femenina) con el espermatozoide (masculino) formando el cigoto. QUÍMICA: materia (estados: sólido, líquido, gas, plasma; cambios físicos vs químicos). Átomo: unidad básica de la materia. Partes: protón (carga positiva, en núcleo), neutrón (sin carga, en núcleo), electrón (carga negativa, en órbita alrededor del núcleo). Número atómico = cantidad de protones (carga +, en núcleo), neutrones (sin carga, en núcleo), electrones (carga -, en órbita). Número atómico = cantidad de protones. Tabla periódica: organiza los 118 elementos. Grupos = columnas verticales; elementos del mismo grupo tienen propiedades similares. Períodos = filas horizontales; indican niveles de energía. Metales (conductores de electricidad y calor, brillo metálico) vs no metales (malos conductores, sin brillo). Enlace químico (iónico, covalente, metálico). Reacciones químicas (reactantes, productos; conservación de masa; tipos: síntesis, descomposición, sustitución, doble sustitución). FÍSICA: fuerzas (Newton: primera ley=inercia, segunda ley=F=ma (Fuerza=masa×aceleración), tercera ley=acción-reacción). Energía cinética = energía del movimiento (depende de masa y velocidad: Ec=½mv²). Energía potencial = energía almacenada por posición o altura (Ep=mgh). Energía térmica. Conservación de la energía: no se crea ni destruye, solo se transforma. Ondas (sonido, luz; reflexión, refracción). Electricidad básica (circuito, voltaje, corriente, resistencia; ley de Ohm).` }
 ];
 
 // ══ RECURSOS EXTERNOS ══
@@ -791,15 +808,281 @@ function abrirDinosaurios(){
   const url='https://www.revista.unam.mx/vol.2/num4/sabias1/tipos.html';
   if(!window.open(url,'_blank')) notif('📋 Abre: revista.unam.mx/vol.2/num4/sabias1/tipos.html');
 }
-// legacy
-function abrirTablaConfirmLegacy(){
-  // Abre en nueva pestaña — registrado como recurso autorizado (no dispara alerta)
-  const url='https://www.fishersci.es/es/es/periodic-table.html';
-  const win=window.open.__original ? window.open.__original(url,'_blank') : null;
-  if(!win){
-    // Fallback: mostrar instrucción
-    notif('📋 Copia este link en una pestaña nueva: fishersci.es/es/es/periodic-table.html');
+
+
+
+// ══ SISTEMA DE VIDEOS EDUCATIVOS ══
+const VIDEOS = {
+  math: {
+    'función lineal': {
+      id: 'l3dCXFYaP4I',
+      titulo: '¿Qué es una función lineal?',
+      desc: 'Explicación visual de función lineal f(x)=mx con ejemplos paso a paso',
+      tags: ['función','pendiente','gráfica','f(x)=mx']
+    },
+    'función afín': {
+      id: 'BQu8hLBrZqY',
+      titulo: 'Función afín f(x)=mx+n',
+      desc: 'Diferencia entre función lineal y afín, pendiente y coeficiente de posición',
+      tags: ['afín','f(x)=mx+n','pendiente','n']
+    },
+    'pendiente': {
+      id: 'jBea0zHE7Hc',
+      titulo: 'Cálculo de pendiente entre dos puntos',
+      desc: 'Fórmula m=(y2-y1)/(x2-x1) con ejemplos visuales y en plano cartesiano',
+      tags: ['pendiente','m=','y2-y1','recta']
+    },
+    'traslación': {
+      id: 'KGUGNBXqVXo',
+      titulo: 'Traslación isométrica — Geometría 8°',
+      desc: 'Transformación que mueve figuras usando un vector sin cambiar forma ni tamaño',
+      tags: ['traslación','vector','isometría','geometría']
+    },
+    'rotación': {
+      id: 'C8hVWqW_5P8',
+      titulo: 'Rotación de figuras en el plano',
+      desc: 'Rotación 90°, 180°, 270° respecto al origen. Fórmulas con ejemplos',
+      tags: ['rotación','90°','180°','isometría']
+    },
+    'simetría': {
+      id: 'nkDmyv6HWEY',
+      titulo: 'Simetría axial y central',
+      desc: 'Reflexión respecto a un eje y simetría respecto a un punto. Ejemplos visuales',
+      tags: ['simetría','reflexión','eje','isometría']
+    },
+    'semejanza thales': {
+      id: 'pMqrNBPEMjc',
+      titulo: 'Semejanza de triángulos y Teorema de Thales',
+      desc: 'Criterios LLL, AA, LAL, LLA. Thales y proporcionalidad de segmentos',
+      tags: ['semejanza','Thales','triángulo','proporcional']
+    },
+    'perímetro área': {
+      id: 'VDrEzMWFoS0',
+      titulo: 'Área y perímetro de figuras planas',
+      desc: 'Fórmulas de cuadrado, rectángulo, triángulo y círculo con ejercicios',
+      tags: ['área','perímetro','polígono','fórmulas']
+    },
+    'volumen': {
+      id: 'W-RjBqkuPJo',
+      titulo: 'Volumen de prismas, cilindros y pirámides',
+      desc: 'V=Abase×h para prismas; V=(1/3)Abase×h para pirámides. Visual en 3D',
+      tags: ['volumen','prisma','pirámide','cilindro']
+    },
+  },
+  lengua: {
+    'texto argumentativo': {
+      id: 'GluihB7fNq4',
+      titulo: '¿Qué es un texto argumentativo?',
+      desc: 'Tesis, argumentos y conclusión. Cómo escribir un texto para convencer',
+      tags: ['argumentativo','tesis','argumentos','conclusión']
+    },
+    'metáfora símil': {
+      id: 'YCrkB-LNzp4',
+      titulo: 'Figuras retóricas: metáfora, símil, hipérbole',
+      desc: 'Diferencias entre figuras literarias con ejemplos creativos y divertidos',
+      tags: ['metáfora','símil','hipérbole','figura retórica']
+    },
+    'análisis literario': {
+      id: 'A0FuqkN9fok',
+      titulo: 'Cómo analizar un texto literario',
+      desc: 'Narrador, personajes, conflicto, tema, espacio y tiempo en una obra',
+      tags: ['análisis','narrador','personaje','conflicto']
+    },
+    'comprensión lectora': {
+      id: 'WJ8W0nZ5rMg',
+      titulo: 'Comprensión lectora — idea principal e inferencias',
+      desc: 'Estrategias para encontrar la idea principal y hacer inferencias en un texto',
+      tags: ['comprensión','idea principal','inferencia','lectura']
+    },
+    'género lírico': {
+      id: 'RdQYnNm-Y8U',
+      titulo: 'El género lírico — verso, estrofa y rima',
+      desc: 'Qué es un poema, cómo identificar versos, estrofas y tipos de rima',
+      tags: ['lírico','poema','verso','estrofa','rima']
+    },
+    'ortografía acentuación': {
+      id: 'q-7NxQN_dKc',
+      titulo: 'Reglas de acentuación — agudas, graves, esdrújulas',
+      desc: 'Cuándo y por qué se pone tilde. Reglas claras con ejemplos',
+      tags: ['tilde','aguda','grave','esdrújula','ortografía']
+    },
+  },
+  historia: {
+    'humanismo renacimiento': {
+      id: 'NxESFwhbFXo',
+      titulo: 'Humanismo y Renacimiento',
+      desc: 'Del teocentrismo al antropocentrismo. Arte, pensadores y la imprenta de Gutenberg',
+      tags: ['Humanismo','Renacimiento','Erasmo','Leonardo']
+    },
+    'reforma lutero': {
+      id: 'PbBDP1Elbb0',
+      titulo: 'La Reforma Protestante — Lutero y sus 95 tesis',
+      desc: 'Por qué Lutero protestó contra la Iglesia y cómo cambió Europa para siempre',
+      tags: ['Lutero','Reforma','Iglesia','protestante']
+    },
+    'conquista america': {
+      id: 'cTHRcLlUDfA',
+      titulo: 'La Conquista de América',
+      desc: 'Colón 1492, Cortés, Pizarro, encomienda, mita y resistencia indígena',
+      tags: ['conquista','Colón','América','encomienda']
+    },
+    'ilustración': {
+      id: 'OgH8FDStmwY',
+      titulo: 'La Ilustración — Rousseau, Locke y Montesquieu',
+      desc: 'El siglo de la razón. Los filósofos que inspiraron las revoluciones modernas',
+      tags: ['Ilustración','Rousseau','Locke','Montesquieu','razón']
+    },
+    'revolución francesa': {
+      id: 'cJhL3DmT7bA',
+      titulo: 'La Revolución Francesa',
+      desc: 'Causas, etapas y consecuencias. Libertad, igualdad, fraternidad y la guillotina',
+      tags: ['Revolución Francesa','1789','libertad','igualdad']
+    },
+    'revolución americana': {
+      id: 'WNNQQ0p8xDE',
+      titulo: 'Revolución Americana — Independencia de EE.UU.',
+      desc: 'Las colonias contra Gran Bretaña. 1776 y la primera democracia moderna',
+      tags: ['Revolución Americana','1776','independencia','colonias']
+    },
+  },
+  ciencias: {
+    'célula': {
+      id: 'eyXbiEGcqtY',
+      titulo: 'La célula — partes y funciones',
+      desc: 'Membrana, núcleo, citoplasma y orgánulos. Diferencias entre animal y vegetal',
+      tags: ['célula','membrana','núcleo','cloroplasto']
+    },
+    'mitosis': {
+      id: 'L0k-enzC4rE',
+      titulo: 'La mitosis — fases de la división celular',
+      desc: 'Interfase, profase, metafase, anafase y telofase explicadas visualmente',
+      tags: ['mitosis','profase','metafase','anafase','telofase']
+    },
+    'adn genética': {
+      id: 'yjzNBn8GKNM',
+      titulo: 'ADN, genes y herencia genética',
+      desc: 'Qué es el ADN, cómo se heredan los caracteres. Mendel y sus leyes',
+      tags: ['ADN','gen','herencia','Mendel','cromosoma']
+    },
+    'evolución darwin': {
+      id: 'GhHOjC4klEg',
+      titulo: 'Darwin y la teoría de la evolución',
+      desc: 'Selección natural, adaptación y evidencias fósiles. ¿Por qué sobreviven los más aptos?',
+      tags: ['Darwin','evolución','selección natural','fósil']
+    },
+    'tabla periódica': {
+      id: 'rz4Vfd3o41A',
+      titulo: 'La tabla periódica — grupos, períodos y elementos',
+      desc: 'Cómo leer la tabla periódica. Metales, no metales, número atómico y masa',
+      tags: ['tabla periódica','elemento','grupo','período','átomo']
+    },
+    'reacciones químicas': {
+      id: 'sl5m_dqGaY8',
+      titulo: 'Reacciones químicas — tipos y conservación de masa',
+      desc: 'Reactantes y productos. Síntesis, descomposición y sustitución con ejemplos',
+      tags: ['reacción química','reactantes','productos','masa']
+    },
+    'leyes newton': {
+      id: 'GR5KSVKxFQQ',
+      titulo: 'Las 3 leyes de Newton explicadas',
+      desc: 'Inercia, F=ma y acción-reacción. Ejemplos cotidianos y con fósiles/geología',
+      tags: ['Newton','F=ma','inercia','acción','reacción']
+    },
+    'energía': {
+      id: 'w4QFz39OEAw',
+      titulo: 'Energía cinética y potencial',
+      desc: 'Ec=½mv² y Ep=mgh. Conservación de la energía con ejemplos visuales',
+      tags: ['energía cinética','potencial','velocidad','altura']
+    },
   }
+};
+
+// Detectar qué video mostrar según el mensaje del profe IA
+function detectarVideoRelevante(texto, materiaId) {
+  if(!texto || !materiaId || !VIDEOS[materiaId]) return null;
+  const t = texto.toLowerCase();
+  const vids = VIDEOS[materiaId];
+  
+  // Mapeo de palabras clave → tema de video
+  const mapas = {
+    math: {
+      'función lineal': ['función lineal','f(x)=mx','función que pasa por el origen'],
+      'función afín': ['función afín','f(x)=mx+n','coeficiente de posición'],
+      'pendiente': ['pendiente','inclinación de la recta','razón de cambio'],
+      'traslación': ['traslación','vector de traslación','mover la figura'],
+      'rotación': ['rotación','girar','90°','180°','270°'],
+      'simetría': ['simetría axial','simetría central','reflexión','eje de simetría'],
+      'semejanza thales': ['semejanza','thales','triángulo semejante','lados proporcionales'],
+      'perímetro área': ['perímetro','área','polígono','círculo','rectángulo','triángulo'],
+      'volumen': ['volumen','prisma','pirámide','cilindro'],
+    },
+    lengua: {
+      'texto argumentativo': ['texto argumentativo','tesis','argumentos','convencer'],
+      'metáfora símil': ['metáfora','símil','hipérbole','figura retórica','personificación'],
+      'análisis literario': ['análisis','narrador','personaje','conflicto','tema de la obra'],
+      'comprensión lectora': ['comprensión','idea principal','inferencia','leer'],
+      'género lírico': ['poema','verso','estrofa','rima','género lírico'],
+      'ortografía acentuación': ['tilde','acentuación','aguda','grave','esdrújula','ortografía'],
+    },
+    historia: {
+      'humanismo renacimiento': ['humanismo','renacimiento','gutenberg','leonardo','erasmo'],
+      'reforma lutero': ['lutero','reforma','protestante','iglesia','indulgencias'],
+      'conquista america': ['conquista','colón','encomienda','mita','indígena','virreinato'],
+      'ilustración': ['ilustración','rousseau','locke','montesquieu','razón','enciclopedia'],
+      'revolución francesa': ['revolución francesa','guillotina','libertad igualdad','1789'],
+      'revolución americana': ['revolución americana','1776','colonias','independencia eeuu'],
+    },
+    ciencias: {
+      'célula': ['célula','membrana','núcleo','citoplasma','orgánulo','cloroplasto'],
+      'mitosis': ['mitosis','profase','metafase','anafase','telofase','interfase','división celular'],
+      'adn genética': ['adn','gen','cromosoma','herencia','mendel','alelo','dominante'],
+      'evolución darwin': ['darwin','evolución','selección natural','fósil','adaptación'],
+      'tabla periódica': ['tabla periódica','número atómico','grupo','período','elemento químico'],
+      'reacciones químicas': ['reacción química','reactantes','productos','síntesis','descomposición'],
+      'leyes newton': ['newton','f=ma','inercia','acción','reacción','fuerza'],
+      'energía': ['energía cinética','energía potencial','velocidad','altura','ec=','ep='],
+    }
+  };
+
+  const mapa = mapas[materiaId];
+  if(!mapa) return null;
+
+  for(const [tema, keywords] of Object.entries(mapa)) {
+    if(keywords.some(k => t.includes(k)) && vids[tema]) {
+      return { tema, ...vids[tema] };
+    }
+  }
+  return null;
+}
+
+// Mostrar video en el chat de clase
+function mostrarVideoEnClase(video) {
+  if(!video) return;
+  const chat = document.getElementById('chat');
+  
+  // Evitar duplicar el mismo video
+  const existing = chat.querySelector(`[data-video="${video.id}"]`);
+  if(existing) return;
+  
+  const div = document.createElement('div');
+  div.className = 'video-sugerido';
+  div.setAttribute('data-video', video.id);
+  div.innerHTML = `
+    <div class="video-header">
+      <span class="video-icon">🎬</span>
+      <span class="video-label">Video del Profe IA</span>
+    </div>
+    <div class="video-title">${video.titulo}</div>
+    <div class="video-desc">${video.desc}</div>
+    <div class="video-embed">
+      <iframe src="https://www.youtube.com/embed/${video.id}?rel=0&modestbranding=1&cc_lang_pref=es&cc_load_policy=1"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen loading="lazy" title="${video.titulo}"></iframe>
+    </div>
+    <div class="video-tags">${video.tags.map(t=>`<span class="video-tag">${t}</span>`).join('')}</div>
+  `;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
 }
 
 function renderBloques(){
@@ -826,6 +1109,7 @@ function renderBloques(){
 let claseInterval=null;
 
 function iniciarClase(bloque){
+  if(claseInterval){clearInterval(claseInterval);claseInterval=null;}
   state.claseActual=bloque;
   state.chatHistory=[];
   state.claseSecs=0;
@@ -835,6 +1119,8 @@ function iniciarClase(bloque){
   document.getElementById('clase-etapa').textContent='Explicación del tema';
   document.getElementById('chat').innerHTML='';
   document.getElementById('clase-fill').style.width='5%';
+  document.getElementById('clase-timer').textContent='00:00';
+  document.getElementById('clase-timer').classList.remove('alerta');
   document.getElementById('card-atrasadas').style.display='none';
   // Mostrar/ocultar recursos según materia
   const cardTabla = document.getElementById('card-tabla-periodica');
@@ -849,6 +1135,9 @@ function iniciarClase(bloque){
   const sistemaAdaptado=construirSistemaAdaptado(bloque);
   llamarIA([{role:'user',content:`Hola profe, estoy lista para ${bloque.name}. Hoy me siento: ${state.mood}, concentración: ${state.concentracion}/5, energía: ${state.energia}/5.`}], sistemaAdaptado, (resp)=>{
     agregarMsg('profe', resp);
+    // Video de bienvenida al tema
+    const videoInicio = detectarVideoRelevante(bloque.sistema.slice(0,300), bloque.id);
+    if(videoInicio) setTimeout(()=>mostrarVideoEnClase(videoInicio), 1200);
     document.getElementById('clase-fill').style.width='20%';
     document.getElementById('clase-progreso').textContent='Explicando...';
     document.getElementById('profe-estado').textContent='Explicando el tema';
@@ -900,6 +1189,7 @@ function enviar(){
   const inp=document.getElementById('cinput');
   const msg=inp.value.trim();
   if(!msg) return;
+  if(!state.claseActual) return;
   inp.value='';
   agregarMsg('cata', msg);
   state.chatHistory.push({role:'user',content:msg});
@@ -913,7 +1203,12 @@ function enviar(){
   llamarIA(state.chatHistory, sistemaAdaptado, (resp)=>{
     state.chatHistory.push({role:'assistant',content:resp});
     agregarMsg('profe', resp);
-    if(resp.toLowerCase().includes('¡excelente') || resp.toLowerCase().includes('lo lograste') || resp.toLowerCase().includes('completaste')){
+    // Detectar y mostrar video relevante
+    if(state.claseActual) {
+      const video = detectarVideoRelevante(resp, state.claseActual.id);
+      if(video) setTimeout(()=>mostrarVideoEnClase(video), 800);
+    }
+    if(resp.includes('[[BLOQUE_COMPLETADO]]')){
       setTimeout(()=>completarBloque(state.claseActual.id), 1000);
     }
   });
@@ -985,7 +1280,7 @@ async function llamarIA(messages, system, callback){
         'anthropic-dangerous-direct-browser-access':'true'
       },
       body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
+        model:'claude-sonnet-4-5',
         max_tokens:400,
         system:system,
         messages:messages
@@ -1014,7 +1309,7 @@ async function llamarIADirecta(messages, system){
         'anthropic-version':'2023-06-01',
         'anthropic-dangerous-direct-browser-access':'true'
       },
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:300,system:system,messages:messages})
+      body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:300,system:system,messages:messages})
     });
     const data=await res.json();
     return data.content?.[0]?.text||'';
@@ -1064,9 +1359,11 @@ async function enviarEmail(asunto, cuerpo, destinatarios){
 }
 
 async function enviarReporte(tipo){
+  try {
   const cuerpo=`REPORTE PLATAFORMA CATALINA\nTipo: ${tipo}\nFecha: ${new Date().toLocaleString('es-CL')}\nÁnimo: ${state.log.estadoAnimico||'N/A'}\nMaterias: ${state.log.materias.join(', ')||'Ninguna'}\nTiempo sesión: ${Math.floor(state.sesionSecs/60)} min`;
   notif('📧 Reporte enviado a tutor');
   await enviarEmail(tipo+' — '+new Date().toLocaleDateString('es-CL'), cuerpo, [TUTOR_EMAIL]);
+  } catch(e){ console.log('Error reporte:',e); }
 }
 
 // ══ NOTIF ══
