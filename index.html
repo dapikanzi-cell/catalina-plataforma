@@ -1133,7 +1133,10 @@ function iniciarClase(bloque){
   agregarMsg('profe', intro);
   // Ajustar prompt según ánimo
   const sistemaAdaptado=construirSistemaAdaptado(bloque);
-  llamarIA([{role:'user',content:`Hola profe, estoy lista para ${bloque.name}. Hoy me siento: ${state.mood}, concentración: ${state.concentracion}/5, energía: ${state.energia}/5.`}], sistemaAdaptado, (resp)=>{
+  // Primer mensaje: instrucción explícita para que el profe arranque con explicación real
+  const primerMensaje = `Hola profe. Hoy mi ánimo es: ${state.mood} (${state.moodNivel}/5), concentración: ${state.concentracion}/5, energía: ${state.energia}/5.
+INSTRUCCIÓN: Empieza la clase de ${bloque.name} YA. Elige el tema más importante del programa, explícalo en 3-4 oraciones con un ejemplo relacionado a dinosaurios o geología, y termina con UNA pregunta corta para saber si entendí. No me preguntes por dónde empezar — tú decides.`;
+  llamarIA([{role:'user',content:primerMensaje}], sistemaAdaptado, (resp)=>{
     agregarMsg('profe', resp);
     // Video de bienvenida al tema
     const videoInicio = detectarVideoRelevante(bloque.sistema.slice(0,300), bloque.id);
@@ -1281,7 +1284,7 @@ async function llamarIA(messages, system, callback){
       },
       body:JSON.stringify({
         model:'claude-sonnet-4-5',
-        max_tokens:400,
+        max_tokens:500,
         system:system,
         messages:messages
       })
