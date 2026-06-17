@@ -693,7 +693,7 @@ Tu misión es ENSEÑAR a Catalina a resolver su tarea, JAMÁS resolverla por ell
 7. Al TERMINAR: pídele que explique el procedimiento con sus propias palabras.
 
 REGLAS: NUNCA des respuestas directas. SIEMPRE termina con pregunta. Máx 3 oraciones. Tono amigable. Ejemplos de dinosaurios cuando puedas.
-` + (idiomaActual?.instruccion || '');
+` + ((idiomaActual && idiomaActual.instruccion) || '');
 }
 
 
@@ -826,7 +826,7 @@ function mostrarBloqueNavegacion(url){
 async function reportarIntento(detalle){
   try {
   state.log.alertas.push(detalle+' @ '+new Date().toLocaleTimeString('es-CL'));
-  const cuerpo='ALERTA DE SEGURIDAD - Plataforma Catalina | Fecha: '+new Date().toLocaleString('es-CL')+' | Detalle: '+detalle+' | Materia activa: '+(state.claseActual?.name||'ninguna')+' | Animo: '+(state.log.estadoAnimico||'N/A');
+  const cuerpo='ALERTA DE SEGURIDAD - Plataforma Catalina | Fecha: '+new Date().toLocaleString('es-CL')+' | Detalle: '+detalle+' | Materia activa: '+((state.claseActual && state.claseActual.name)||'ninguna')+' | Animo: '+(state.log.estadoAnimico||'N/A');
   await enviarEmail('🚨 ALERTA navegación Catalina', cuerpo, [TUTOR_EMAIL]);
   } catch(e){ console.log('Error alerta:',e); }
 }
@@ -962,9 +962,9 @@ function mostrarModal20min(){
   const modal=document.getElementById('modal-continuar');
   if(!modal||modal.style.display==='flex') return;
   const box=modal.querySelector('.modal-box');
-  if(box) box.innerHTML='<div class="modal-emoji">🏆</div><div class="modal-title">¡20 minutos aprendiendo!</div><div class="modal-sub">¡Catalina, eres increíble! Llevas 20 minutos con '+(state.claseActual?.name||'la clase')+'.<br>¿Quieres seguir explorando?</div><button class="btn" style="margin-bottom:8px;background:linear-gradient(135deg,#1D9E75,var(--green));" onclick="seguir10mins()">🦕 ¡10 minutos más!</button><button class="btn-sec" style="width:100%;margin-bottom:8px;" onclick="mostrarModalPausa()">⏸ Necesito una pausa</button><button class="btn-red" style="width:100%;" onclick="mostrarTestFin()">Terminar sesión</button>';
+  if(box) box.innerHTML='<div class="modal-emoji">🏆</div><div class="modal-title">¡20 minutos aprendiendo!</div><div class="modal-sub">¡Catalina, eres increíble! Llevas 20 minutos con '+((state.claseActual && state.claseActual.name)||'la clase')+'.<br>¿Quieres seguir explorando?</div><button class="btn" style="margin-bottom:8px;background:linear-gradient(135deg,#1D9E75,var(--green));" onclick="seguir10mins()">🦕 ¡10 minutos más!</button><button class="btn-sec" style="width:100%;margin-bottom:8px;" onclick="mostrarModalPausa()">⏸ Necesito una pausa</button><button class="btn-red" style="width:100%;" onclick="mostrarTestFin()">Terminar sesión</button>';
   modal.style.display='flex';
-  enviarReporte('🏆 Catalina completó 20 minutos estudiando '+( state.claseActual?.name||''));
+  enviarReporte('🏆 Catalina completó 20 minutos estudiando '+( (state.claseActual && state.claseActual.name)||''));
 }
 function seguir10mins(){
   document.getElementById('modal-continuar').style.display='none';
@@ -1037,7 +1037,7 @@ function enviarTestFin(){
 }
 
 async function generarAnalisisYEnviar(){
-  const resumen=Object.entries(testRespuestas).map(([k,v])=>{ const p=testPreguntas.find(x=>x.id===k); return `${p?.texto}: ${v}`; }).join('\n');
+  const resumen=Object.entries(testRespuestas).map(([k,v])=>{ const p=testPreguntas.find(x=>x.id===k); return `${(p && p.texto)}: ${v}`; }).join('\n');
   const sesInfo=`Ánimo inicio: ${state.log.estadoAnimico||'N/A'} | Concentración: ${state.concentracion}/5 | Energía: ${state.energia}/5 | Tiempo: ${Math.floor(state.sesionSecs/60)} min | Materias: ${state.log.materias.join(', ')||'ninguna'}`;
   let analisis='';
   try {
@@ -1439,7 +1439,7 @@ function mostrarVideoEnClase(video, contextoExplicacion) {
   const chat = document.getElementById('chat');
   
   // Evitar duplicar el mismo video
-  if(VIDEOS[state.claseActual?.id] && !Object.values(VIDEOS[state.claseActual.id]).some(v=>v.id===video.id)) return;
+  if(VIDEOS[(state.claseActual && state.claseActual.id)] && !Object.values(VIDEOS[state.claseActual.id]).some(v=>v.id===video.id)) return;
   const existing = chat.querySelector(`[data-video="${video.id}"]`);
   if(existing) return;
   
@@ -1512,7 +1512,7 @@ function iniciarClase(bloque){
   // Ajustar prompt según ánimo
   const sistemaAdaptado=construirSistemaAdaptado(bloque);
   // Primer mensaje: instrucción explícita para que el profe arranque con explicación real
-  const primerMensaje=`[INICIO DE CLASE] Ánimo: ${state.mood} (${state.moodNivel}/5) | Concentración: ${state.concentracion}/5 | Energía: ${state.energia}/5. ${idiomaActual?.instruccion||''}
+  const primerMensaje=`[INICIO DE CLASE] Ánimo: ${state.mood} (${state.moodNivel}/5) | Concentración: ${state.concentracion}/5 | Energía: ${state.energia}/5. ${(idiomaActual && idiomaActual.instruccion)||''}
 MÉTODO: 1) ENGANCHA con dato sorprendente de dinosaurios/geología. 2) Explica en máx 2 oraciones. 3) Añade [IMG:english description] si ayuda visualizar. 4) Termina con [OPC:A|B|C] o pregunta abierta. Tú decides el tema.`;  vozHistorial=[]; vozIndexActual=-1;
   state.chatHistory.push({role:'user',content:primerMensaje});
   mostrarTypingIA();
@@ -1544,7 +1544,7 @@ function construirSistemaAdaptado(bloque){
   // Instrucción para usar material de apoyo — el profe dirige, el material apoya
   const instruccionMaterial = ` USO DE MATERIAL: Cuando acabes de explicar un concepto clave y creas que un video ayudaría a Catalina a visualizarlo mejor, escribe [[VIDEO:tema]] en tu respuesta (por ejemplo [[VIDEO:pendiente]] o [[VIDEO:célula]]). Hazlo DESPUÉS de tu explicación, no antes. No uses el tag en cada mensaje, solo cuando realmente ayude a visualizar algo complejo. Los temas disponibles son: ${Object.keys(VIDEOS[bloque.id]||{}).join(', ')}.`;
 
-  const idExtra=idiomaActual?.instruccion?' IDIOMA: '+idiomaActual.instruccion:'';
+  const idExtra=(idiomaActual && idiomaActual.instruccion)?' IDIOMA: '+idiomaActual.instruccion:'';
   return bloque.sistema + idExtra + ' AJUSTE DE SESIÓN: ' + ajuste + instruccionMaterial;
 }
 
@@ -1656,7 +1656,7 @@ async function llamarIA(messages, system, callback){
     });
     const data=await res.json();
     if(data.error) throw new Error(data.error.message);
-    const resp=data.content?.[0]?.text||'Perdona, no pude responder ahora.';
+    const resp=(data.content && data.content[0] && data.content[0].text)||'Perdona, no pude responder ahora.';
     typing.remove();
     callback(resp);
   } catch(e){
@@ -1680,7 +1680,7 @@ async function llamarIADirecta(messages, system){
       body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:300,system:system,messages:messages})
     });
     const data=await res.json();
-    return data.content?.[0]?.text||'';
+    return (data.content && data.content[0] && data.content[0].text)||'';
   } catch(e){ return ''; }
 }
 
@@ -1736,7 +1736,7 @@ function procesarYMostrarRespuesta(texto){
   }
   if(opcMatch){ const opts=opcMatch[1].split('|').map(s=>s.trim()).filter(Boolean); if(opts.length>1) setTimeout(()=>mostrarOpciones(opts,chat),600); }
   if(texto.includes('[[VIDEO:')){
-    const mat=state.claseActual?.id;
+    const mat=(state.claseActual && state.claseActual.id);
     if(mat) procesarRespuestaProfe(texto,mat);
   }
 }
