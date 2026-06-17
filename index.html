@@ -1,0 +1,1866 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plataforma de Catalina — Profe IA</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+:root {
+  --bg:#0b0b1a;--bg2:#13132a;--bg3:#1c1c38;--card:#161630;
+  --border:rgba(255,255,255,0.07);--text:#f0edff;--text2:#a89ec8;--text3:#5e5880;
+  --purple:#7c6fcd;--purple2:#a08fef;--green:#4ecb8d;--green2:#2ecc71;
+  --yellow:#ffd166;--pink:#ff9eb5;--red:#ff6b6b;--teal:#06d6a0;
+  --r:14px;--rs:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito',sans-serif;overflow-x:hidden;}
+.stars{position:fixed;inset:0;pointer-events:none;z-index:0;}
+.star{position:absolute;background:white;border-radius:50%;animation:tw var(--d) ease-in-out infinite var(--dl);opacity:0;}
+@keyframes tw{0%,100%{opacity:0}50%{opacity:var(--op)}}
+.app{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding-bottom:70px;}
+.screen{display:none;width:100%;max-width:580px;padding:16px;}
+.screen.active{display:block;animation:fu 0.35s ease;}
+@keyframes fu{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes bounce{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+/* TOPBAR */
+.topbar{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;}
+.tl{display:flex;align-items:center;gap:10px;}
+.av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--pink));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:white;position:relative;}
+.dot{position:absolute;bottom:1px;right:1px;width:8px;height:8px;background:var(--green);border-radius:50%;border:2px solid var(--bg2);}
+.tn{font-family:'Fredoka One',sans-serif;font-size:16px;color:var(--text);}
+.ts{font-size:11px;color:var(--text3);}
+.badge{font-size:11px;padding:4px 10px;border-radius:20px;background:rgba(78,203,141,0.1);color:var(--green);border:1px solid rgba(78,203,141,0.2);}
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:12px;}
+.ctitle{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;}
+/* BUTTONS */
+.btn{background:linear-gradient(135deg,var(--purple),var(--purple2));color:white;border:none;border-radius:var(--rs);padding:13px;font-size:15px;font-weight:700;cursor:pointer;width:100%;font-family:'Nunito',sans-serif;transition:all 0.2s;letter-spacing:0.01em;}
+.btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(124,111,205,0.4);}
+.btn:disabled{opacity:0.35;transform:none;cursor:not-allowed;}
+.btn-sec{background:var(--bg3);color:var(--text2);border:1px solid var(--border);border-radius:var(--rs);padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Nunito',sans-serif;transition:all 0.15s;}
+.btn-sec:hover{border-color:var(--purple);color:var(--purple2);}
+.btn-green{background:linear-gradient(135deg,#1D9E75,var(--green));color:white;border:none;border-radius:var(--rs);padding:13px;font-size:15px;font-weight:700;cursor:pointer;width:100%;font-family:'Nunito',sans-serif;transition:all 0.2s;}
+.btn-green:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(78,203,141,0.4);}
+.btn-red{background:linear-gradient(135deg,#c0392b,var(--red));color:white;border:none;border-radius:var(--rs);padding:13px;font-size:15px;font-weight:700;cursor:pointer;width:100%;font-family:'Nunito',sans-serif;}
+/* MOOD */
+.mgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px;}
+.mb{background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--rs);padding:10px 4px;text-align:center;cursor:pointer;transition:all 0.18s;}
+.mb:hover{border-color:var(--purple);transform:translateY(-2px);}
+.mb.sel{border-color:var(--purple2);background:rgba(124,111,205,0.15);box-shadow:0 0 16px rgba(124,111,205,0.25);}
+.me{font-size:22px;display:block;margin-bottom:3px;}
+.ml{font-size:10px;color:var(--text2);font-weight:600;}
+/* PROGRESS */
+.bloques-wrap{margin-bottom:14px;}
+.bloque-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);margin-bottom:8px;cursor:pointer;transition:all 0.15s;}
+.bloque-item:hover{border-color:var(--purple);}
+.bloque-item.done{border-color:var(--green);background:rgba(78,203,141,0.06);}
+.bi-icon{font-size:22px;width:36px;text-align:center;}
+.bi-info{flex:1;}
+.bi-name{font-size:14px;font-weight:700;color:var(--text);}
+.bi-desc{font-size:11px;color:var(--text3);}
+.bi-status{font-size:11px;padding:3px 8px;border-radius:20px;font-weight:700;}
+.s-done{background:rgba(78,203,141,0.1);color:var(--green);}
+.s-pend{background:rgba(255,209,102,0.1);color:var(--yellow);}
+/* CHAT */
+.profe-header{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.profe-av{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#1a3a2a,#0d2018);border:2px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;}
+.profe-name{font-family:'Fredoka One',sans-serif;font-size:18px;color:var(--green);margin-bottom:2px;}
+.profe-sub{font-size:12px;color:var(--text3);}
+.chat-area{min-height:280px;max-height:420px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;margin-bottom:12px;padding-right:4px;}
+.chat-area::-webkit-scrollbar{width:3px;}
+.chat-area::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:99px;}
+.msg{padding:12px 14px;border-radius:var(--rs);font-size:14px;line-height:1.65;max-width:92%;animation:fu 0.3s ease;}
+.msg-profe{background:var(--bg3);color:var(--text);border:1px solid var(--border);align-self:flex-start;border-bottom-left-radius:4px;}
+.msg-profe.typing{background:var(--bg3);color:var(--text3);font-style:italic;}
+.msg-cata{background:rgba(124,111,205,0.15);color:var(--text);border:1px solid rgba(124,111,205,0.2);align-self:flex-end;border-bottom-right-radius:4px;}
+.chat-input-wrap{display:flex;gap:8px;}
+.chat-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);padding:10px 14px;color:var(--text);font-size:14px;font-family:'Nunito',sans-serif;outline:none;transition:border-color 0.15s;}
+.chat-input:focus{border-color:var(--purple);}
+/* TIMER */
+.timer-pill{background:rgba(255,209,102,0.1);border:1px solid rgba(255,209,102,0.2);color:var(--yellow);font-size:13px;font-weight:700;padding:5px 12px;border-radius:20px;font-family:monospace;}
+.timer-pill.alerta{background:rgba(255,107,107,0.15);border-color:rgba(255,107,107,0.3);color:var(--red);animation:tw 1s ease-in-out infinite;}
+/* PBAR */
+.pbar-wrap{margin-bottom:12px;}
+.pbar-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:5px;}
+.pbar-bg{height:5px;background:var(--bg3);border-radius:99px;overflow:hidden;}
+.pbar-fill{height:100%;background:linear-gradient(90deg,var(--purple),var(--purple2));border-radius:99px;transition:width 0.4s;}
+/* PALEO */
+.paleo-hero{text-align:center;padding:20px 0 10px;}
+.paleo-title{font-family:'Fredoka One',sans-serif;font-size:28px;color:var(--green);margin-bottom:6px;}
+.paleo-sub{font-size:14px;color:var(--text3);margin-bottom:20px;}
+
+.fact-card{background:rgba(78,203,141,0.06);border:1px solid rgba(78,203,141,0.15);border-radius:var(--rs);padding:14px;margin-bottom:10px;}
+.fact-emoji{font-size:28px;margin-bottom:6px;display:block;}
+.fact-title{font-size:15px;font-weight:700;color:var(--green);margin-bottom:4px;}
+.fact-text{font-size:13px;color:var(--text2);line-height:1.6;}
+
+/* PONY */
+.pony-tip{display:flex;align-items:flex-start;gap:10px;background:rgba(255,158,181,0.06);border:1px solid rgba(255,158,181,0.15);border-radius:var(--rs);padding:10px 12px;margin-bottom:10px;font-size:13px;color:var(--text2);}
+/* NAV */
+.nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);padding:8px 10px;display:flex;gap:5px;justify-content:center;flex-wrap:wrap;z-index:100;}
+/* NOTIF */
+.notif{position:fixed;top:16px;left:16px;right:16px;background:#0f2a1a;border:1px solid var(--green);border-radius:var(--r);padding:12px 16px;z-index:9999;font-size:13px;color:var(--green);box-shadow:0 8px 32px rgba(0,0,0,0.5);animation:fu 0.3s ease;}
+.notif.alerta{background:#2a0f0f;border-color:var(--red);color:var(--red);}
+/* MODAL */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:24px;max-width:380px;width:100%;text-align:center;}
+.modal-emoji{font-size:48px;margin-bottom:10px;}
+.modal-title{font-family:'Fredoka One',sans-serif;font-size:20px;color:var(--text);margin-bottom:6px;}
+.modal-sub{font-size:13px;color:var(--text3);margin-bottom:20px;line-height:1.6;}
+/* RANGE */
+.range-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.range-lbl{font-size:12px;color:var(--text2);min-width:100px;}
+input[type=range]{flex:1;accent-color:var(--purple2);}
+.range-v{font-size:13px;font-weight:700;color:var(--purple2);min-width:16px;}
+/* IA TIP */
+.ia-tip{background:linear-gradient(135deg,rgba(124,111,205,0.08),transparent);border:1px solid rgba(124,111,205,0.15);border-radius:var(--rs);padding:10px 14px;font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.5;}
+/* BOTÓN PAUSA FIJO */
+#btn-pausa-fijo{position:fixed;bottom:62px;right:16px;z-index:500;background:rgba(255,107,107,0.18);border:1.5px solid var(--red);color:var(--red);border-radius:99px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;backdrop-filter:blur(6px);transition:all 0.2s;box-shadow:0 4px 16px rgba(255,107,107,0.2);}
+#btn-pausa-fijo:hover{background:rgba(255,107,107,0.3);}
+/* TEST FIN SESIÓN */
+.test-opt{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--rs);margin-bottom:8px;cursor:pointer;font-size:13px;color:var(--text2);transition:all 0.15s;}
+.test-opt:hover{border-color:var(--purple);color:var(--text);}
+.test-opt.sel{border-color:var(--purple2);background:rgba(124,111,205,0.15);color:var(--text);}
+
+/* BLOQUEO NAVEGACION */
+#overlay-bloqueo{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:99999;align-items:center;justify-content:center;padding:20px;}
+#overlay-bloqueo .ob-box{background:var(--bg2);border:2px solid var(--red);border-radius:var(--r);padding:28px;max-width:360px;text-align:center;}
+
+/* SISTEMA DE VIDEOS */
+.video-sugerido{background:linear-gradient(135deg,#0d1a0d,#071007);border:1px solid rgba(78,203,141,0.25);border-radius:var(--rs);padding:12px;margin-top:10px;animation:fu 0.4s ease;}
+.video-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.video-icon{font-size:18px;}
+.video-label{font-size:11px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:0.06em;}
+.video-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.video-desc{font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.5;}
+.video-embed{position:relative;width:100%;padding-bottom:56.25%;border-radius:8px;overflow:hidden;background:#000;}
+.video-embed iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none;}
+.video-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;}
+.video-tag{font-size:10px;padding:2px 8px;border-radius:20px;background:rgba(78,203,141,0.08);color:var(--green);border:1px solid rgba(78,203,141,0.15);}
+
+/* VOZ Y VELOCIDAD */
+.voz-toggle{background:rgba(78,203,141,0.1);border:1px solid rgba(78,203,141,0.2);color:var(--green);border-radius:99px;padding:5px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;}
+.voz-toggle.off{background:rgba(255,255,255,0.04);border-color:var(--border);color:var(--text3);}
+.retro-btn{background:rgba(160,143,239,0.1);border:1px solid rgba(160,143,239,0.2);color:var(--purple2);border-radius:99px;padding:5px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;}
+.speed-wrap{display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+.speed-lbl{font-size:11px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap;}
+.speed-btns{display:flex;gap:5px;}
+.speed-btn{background:var(--bg);border:1.5px solid var(--border);border-radius:99px;padding:5px 10px;cursor:pointer;font-size:11px;font-weight:700;color:var(--text2);transition:all 0.15s;font-family:'Nunito',sans-serif;}
+.speed-btn:hover{border-color:var(--purple);color:var(--text);}
+.speed-btn.activo{border-color:var(--green);background:rgba(78,203,141,0.1);color:var(--green);}
+@keyframes wave{0%,100%{transform:scaleY(0.5)}50%{transform:scaleY(1)}}
+
+/* VISUAL CON EXPLICACIÓN */
+.visual-explicado{background:var(--card);border:1.5px solid rgba(124,111,205,0.2);border-radius:var(--r);overflow:hidden;margin:6px 0;animation:fu 0.35s ease;}
+.visual-explicado img{width:100%;max-height:200px;object-fit:cover;display:block;}
+.visual-exp-box{padding:10px 14px;display:flex;gap:10px;align-items:flex-start;border-top:1px solid var(--border);}
+.visual-exp-av{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#1a3a2a,#0d2018);border:1.5px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.visual-exp-txt{font-size:13px;color:var(--text);line-height:1.6;flex:1;}
+
+/* IDIOMAS */
+.idiomas-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--rs);padding:14px 16px;margin-bottom:12px;}
+.idiomas-titulo{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;}
+.idiomas-grid{display:flex;gap:8px;flex-wrap:wrap;}
+.idioma-btn{background:var(--bg);border:1.5px solid var(--border);border-radius:99px;padding:7px 13px;cursor:pointer;font-size:12px;font-weight:700;color:var(--text2);transition:all 0.15s;font-family:'Nunito',sans-serif;}
+.idioma-btn:hover{border-color:var(--purple);color:var(--text);}
+.idioma-btn.activo{border-color:var(--purple2);background:rgba(124,111,205,0.15);color:var(--purple2);}
+.idioma-nota{font-size:11px;color:var(--text3);margin-top:8px;line-height:1.5;}
+
+/* TAREA */
+.tarea-drop{background:var(--card);border:2px dashed rgba(124,111,205,0.3);border-radius:var(--r);padding:16px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:10px;}
+.tarea-drop:hover,.tarea-drop.con-archivo{border-color:var(--green);border-style:solid;background:rgba(78,203,141,0.05);}
+.tarea-badge{background:rgba(124,111,205,0.1);border:1px solid rgba(124,111,205,0.25);border-radius:var(--rs);padding:8px 12px;font-size:12px;color:var(--purple2);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+</style>
+</head>
+<body>
+<div class="stars" id="stars"></div>
+<!-- BOTÓN PAUSA SIEMPRE VISIBLE -->
+<button id="btn-pausa-fijo" onclick="mostrarModalPausa()">⏸ Necesito una pausa</button>
+
+<div class="app">
+
+<!-- ══ PANTALLA: ESTADO ANÍMICO (inicio) ══ -->
+<div class="screen active" id="s-mood">
+  <div class="topbar">
+    <div class="tl">
+      <div class="av" id="av-mood">CA<div class="dot"></div></div>
+      <div><div class="tn">Catalina</div><div class="ts">¿Cómo estás hoy?</div></div>
+    </div>
+    <span class="badge">🛡 Sesión segura</span>
+  </div>
+  <div class="card">
+    <div class="ctitle">Test de inicio — ¿cómo estás hoy?</div>
+    <div class="mgrid">
+      <div class="mb" onclick="setMood(this,'🌟','Genial',1,'Hoy puedes con todo. Empezamos con los bloques y después paleontología sin límite.')"><span class="me">🌟</span><span class="ml">Genial</span></div>
+      <div class="mb" onclick="setMood(this,'😊','Bien',2,'Muy bien. Bloques normales y después tu recompensa de fósiles.')"><span class="me">😊</span><span class="ml">Bien</span></div>
+      <div class="mb" onclick="setMood(this,'😐','Regular',3,'Sin problema. Bloques más cortos hoy. El profe IA se adapta.')"><span class="me">😐</span><span class="ml">Regular</span></div>
+      <div class="mb" onclick="setMood(this,'😴','Cansada',4,'De acuerdo. Sesión ligera, actividades visuales. Sin presión.')"><span class="me">😴</span><span class="ml">Cansada</span></div>
+      <div class="mb" onclick="setMood(this,'😔','Difícil',5,'Está bien. Solo una cosita hoy. El profe IA estará contigo.')"><span class="me">😔</span><span class="ml">Difícil</span></div>
+    </div>
+    <div class="range-row"><span class="range-lbl">Concentración</span><input type="range" min="1" max="5" value="3" oninput="document.getElementById('cv').textContent=this.value;state.concentracion=+this.value"><span class="range-v" id="cv">3</span></div>
+    <div class="range-row"><span class="range-lbl">Energía</span><input type="range" min="1" max="5" value="3" oninput="document.getElementById('ev').textContent=this.value;state.energia=+this.value"><span class="range-v" id="ev">3</span></div>
+    <div class="ia-tip" id="mood-tip">Selecciona cómo te sientes para que el profe IA adapte la clase de hoy.</div>
+    <div id="apikey-wrap" style="margin-bottom:12px;">
+      <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">🔑 API Key de Anthropic</div>
+      <div style="display:flex;gap:8px;">
+        <input type="password" id="apikey-input" placeholder="sk-ant-api03-..." 
+          style="flex:1;background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--rs);padding:10px 14px;color:var(--text);font-size:13px;font-family:'Nunito',sans-serif;outline:none;"
+          oninput="guardarApiKey(this.value)"
+          onfocus="this.style.borderColor='var(--purple)'"
+          onblur="this.style.borderColor='var(--border)'">
+        <button class="btn-sec" style="padding:10px 14px;font-size:12px;" onclick="toggleApiKeyVisible()">👁</button>
+      </div>
+      <div id="apikey-status" style="font-size:11px;margin-top:5px;color:var(--text3);"></div>
+    </div>
+    <!-- IDIOMAS -->
+    <div class="idiomas-wrap">
+      <div class="idiomas-titulo">🌍 Idioma de la clase</div>
+      <div class="idiomas-grid">
+        <button class="idioma-btn activo" id="lang-es" onclick="setIdioma('es')">🇨🇱 Español</button>
+        <button class="idioma-btn" id="lang-en" onclick="setIdioma('en')">🇺🇸 English</button>
+        <button class="idioma-btn" id="lang-fr" onclick="setIdioma('fr')">🇫🇷 Français</button>
+        <button class="idioma-btn" id="lang-zh" onclick="setIdioma('zh')">🐉 中文</button>
+      </div>
+      <div class="idioma-nota" id="idioma-nota">El profe IA explicará en español. Puedes cambiar cuando quieras.</div>
+      <div class="speed-wrap">
+        <span class="speed-lbl">🎙 Velocidad voz</span>
+        <div class="speed-btns">
+          <button class="speed-btn" onclick="setVelocidad(0.75,this)">🐢 Lenta</button>
+          <button class="speed-btn activo" id="speed-normal" onclick="setVelocidad(1.0,this)">▶ Normal</button>
+          <button class="speed-btn" onclick="setVelocidad(1.35,this)">⚡ Rápida</button>
+        </div>
+      </div>
+    </div>
+    <!-- TAREA -->
+    <div class="tarea-drop" id="tarea-drop" onclick="document.getElementById('tarea-file').click()">
+      <div style="font-size:26px;margin-bottom:4px;">📎</div>
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px;">¿Tienes una tarea?</div>
+      <div style="font-size:11px;color:var(--text3);">Súbela — el profe te enseña a resolverla sin darte las respuestas</div>
+      <div id="tarea-nombre" style="font-size:12px;color:var(--green);font-weight:700;margin-top:6px;"></div>
+      <input type="file" id="tarea-file" style="display:none" accept="image/*,.txt,.pdf" onchange="cargarTarea(this)">
+    </div>
+    <button class="btn-green" id="btn-tarea" onclick="iniciarConTarea()" style="display:none;width:100%;padding:12px;border:none;border-radius:var(--rs);font-size:14px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#1D9E75,var(--green));color:white;margin-bottom:10px;">📚 Trabajar mi tarea con el profe IA →</button>
+    <div style="font-size:11px;color:var(--text3);text-align:center;margin-bottom:10px;">— o continúa con la clase del día —</div>
+    <button class="btn" id="btn-iniciar" disabled onclick="iniciarSesion()">Comenzar mi día de aprendizaje →</button>
+  </div>
+</div>
+
+<!-- ══ PANTALLA: BLOQUES DEL DÍA ══ -->
+<div class="screen" id="s-bloques">
+  <div class="topbar">
+    <div class="tl">
+      <div class="av" id="av-bloques">😊<div class="dot"></div></div>
+      <div><div class="tn" id="blq-greeting">¡Hola, Catalina!</div><div class="ts">Completa los bloques para desbloquear tu recompensa</div></div>
+    </div>
+    <span class="timer-pill" id="session-clock">00:00</span>
+  </div>
+  <div class="card">
+    <div class="pony-tip"><span style="font-size:20px;">🦄</span><span id="pony-msg">Twilight Sparkle: "¡Cada bloque completado te acerca más a los dinosaurios!"</span></div>
+    <div class="ctitle">Bloques obligatorios de hoy</div>
+    <div class="bloques-wrap" id="bloques-list"></div>
+  </div>
+  <div class="card" id="paleo-lock-card">
+    <div style="text-align:center;padding:10px 0;">
+      <div style="font-size:36px;margin-bottom:8px;">🔒</div>
+      <div style="font-family:'Fredoka One',sans-serif;font-size:18px;color:var(--text);margin-bottom:4px;">Paleontología — Recompensa bloqueada</div>
+      <div style="font-size:13px;color:var(--text3);">Completa los 4 bloques del día para desbloquearla. Sin límite de tiempo y con todo lo que amas.</div>
+    </div>
+  </div>
+  <div class="card" id="paleo-unlock-card" style="display:none;background:linear-gradient(135deg,#0a1f14,#061510);border-color:rgba(78,203,141,0.3);">
+    <div style="text-align:center;padding:10px 0;">
+      <div style="font-size:36px;margin-bottom:8px;animation:bounce 0.6s ease infinite;">🦕</div>
+      <div style="font-family:'Fredoka One',sans-serif;font-size:20px;color:var(--green);margin-bottom:4px;">¡Paleontología desbloqueada!</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:14px;">Sin límite de tiempo. Solo exploración, animaciones y curiosidad.</div>
+      <button class="btn-green" onclick="goTo('s-paleo')">Explorar ahora 🦴</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PANTALLA: CLASE CON PROFE IA ══ -->
+<div class="screen" id="s-clase">
+  <div class="topbar">
+    <div class="tl">
+      <div style="font-size:26px;" id="clase-icon">📚</div>
+      <div><div class="tn" id="clase-nombre">Clase</div><div class="ts" id="clase-sub">8° básico</div></div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <span class="timer-pill" id="clase-timer">00:00</span>
+      <button class="retro-btn" onclick="retroceder10()">⏮ Repetir</button>
+      <button class="voz-toggle" id="voz-toggle" onclick="toggleVoz()">🔊 Voz</button>
+      <button class="btn-sec" style="padding:6px 10px;" onclick="salirClase()">✕</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="pbar-wrap">
+      <div class="pbar-labels"><span id="clase-etapa">Explicación</span><span id="clase-progreso">Inicio</span></div>
+      <div class="pbar-bg"><div class="pbar-fill" id="clase-fill" style="width:5%"></div></div>
+    </div>
+    <div class="profe-header">
+      <div class="profe-av" id="profe-av">🦖</div>
+      <div>
+        <div class="profe-name">Profe IA</div>
+        <div class="profe-sub" id="profe-estado">Preparando la clase...</div>
+      </div>
+    </div>
+    <div class="chat-area" id="chat"></div>
+    <div class="chat-input-wrap">
+      <input class="chat-input" id="cinput" placeholder="Escribe tu respuesta o pregunta..." onkeydown="if(event.key==='Enter')enviar()">
+      <button class="btn-sec" onclick="enviar()">→</button>
+    </div>
+  </div>
+  <!-- Recurso geometría Mineduc (solo Matemáticas) -->
+  <div class="card" id="card-geometria-mineduc" style="display:none;background:linear-gradient(135deg,#0a0a2a,#060616);border-color:rgba(124,111,205,0.3);">
+    <div class="ctitle">📐 Recurso de clase</div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="font-size:36px;">📏</div>
+      <div style="flex:1;">
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;">Guías de Matemáticas — Mineduc</div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:6px;">Función lineal y afín · Pendiente · Ecuación de la recta</div>
+        <button class="btn-sec" style="font-size:12px;padding:5px 12px;margin-bottom:6px;width:100%;" onclick="abrirFuncionLineal()">Función lineal y afín →</button>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:6px;">Polígonos · Perímetro · Área · Transformaciones · Volumen</div>
+        <button class="btn-sec" style="font-size:12px;padding:5px 12px;width:100%;" onclick="abrirGeometria()">Geometría →</button>
+        <div style="font-size:12px;color:var(--text3);margin:6px 0;">Traslación · Rotación · Simetría · Teselaciones</div>
+        <button class="btn-sec" style="font-size:12px;padding:5px 12px;width:100%;" onclick="abrirIsometrias()">Transformaciones Isométricas →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recurso tabla periódica (solo Ciencias) -->
+  <div class="card" id="card-tabla-periodica" style="display:none;background:linear-gradient(135deg,#0a1430,#060d20);border-color:rgba(160,143,239,0.3);">
+    <div class="ctitle">🔬 Recurso de clase</div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="font-size:36px;">⚗️</div>
+      <div style="flex:1;">
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;">Tabla Periódica Interactiva</div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:10px;">118 elementos · Filtros · Fisher Scientific</div>
+        <button class="btn-sec" style="font-size:12px;padding:7px 14px;" onclick="abrirTablaConfirm()">Abrir tabla periódica →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actividades atrasadas si lleva 45 min en esta materia -->
+  <div class="card" id="card-atrasadas" style="display:none;border-color:rgba(255,209,102,0.3);">
+    <div class="ctitle">⏱ 45 minutos en esta materia</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:12px;">Para continuar, el profe IA propone repasar algo que te costó antes. ¿De acuerdo?</div>
+    <button class="btn" onclick="continuarConActividad()">Sí, repaso lo atrasado 📚</button>
+    <button class="btn-sec" style="width:100%;margin-top:8px;" onclick="salirClase()">Volver a bloques</button>
+  </div>
+</div>
+
+<!-- ══ PANTALLA: TEST FIN DE SESIÓN ══ -->
+<div class="screen" id="s-test-fin">
+  <div class="topbar">
+    <div class="tl">
+      <div style="font-size:26px;">📋</div>
+      <div><div class="tn">Test de cierre</div><div class="ts">Ayuda al profe IA a mejorar la próxima clase</div></div>
+    </div>
+  </div>
+  <div class="card" id="test-fin-content">
+    <div style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6;">Estas preguntas son para que el profe IA aprenda cómo ayudarte mejor. No hay respuestas correctas o incorrectas.</div>
+    <div id="test-preguntas"></div>
+    <button class="btn" id="btn-enviar-test" disabled onclick="enviarTestFin()">Enviar y terminar sesión ✓</button>
+  </div>
+</div>
+
+<!-- ══ PANTALLA: PALEONTOLOGÍA RECOMPENSA ══ -->
+<div class="screen" id="s-paleo">
+  <div class="topbar">
+    <div class="tl">
+      <div style="font-size:26px;">🦕</div>
+      <div><div class="tn">Paleontología</div><div class="ts">Sin límite de tiempo · Solo exploración</div></div>
+    </div>
+    <button class="btn-sec" style="padding:6px 10px;" onclick="goTo('s-bloques')">← Volver</button>
+  </div>
+  <div class="card" style="background:linear-gradient(135deg,#0a1f14,#061510);border-color:rgba(78,203,141,0.2);">
+    <div class="paleo-hero">
+      <div style="font-size:56px;margin-bottom:6px;">🦴</div>
+      <div class="paleo-title">Mundo de los Fósiles</div>
+      <div class="paleo-sub">Explora, descubre, pregunta. Sin notas. Solo curiosidad.</div>
+    </div>
+    <div id="paleo-chat-area" class="chat-area" style="min-height:240px;"></div>
+    <div class="chat-input-wrap" style="margin-top:10px;">
+      <input class="chat-input" id="paleo-input" placeholder="¿Qué quieres saber sobre paleontología?" onkeydown="if(event.key==='Enter')paleoPregunta()">
+      <button class="btn-green" style="width:auto;padding:10px 16px;" onclick="paleoPregunta()">🦕</button>
+    </div>
+  </div>
+  <div class="card" style="background:linear-gradient(135deg,#1a0a0a,#120606);border-color:rgba(255,107,107,0.25);">
+    <div class="ctitle">🦕 Recurso — Tipos de dinosaurios</div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="font-size:36px;">🦴</div>
+      <div style="flex:1;">
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;">Guía ilustrada de la UNAM</div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:10px;">25 especies · Saurisquios y Ornitisquios · Con imágenes</div>
+        <button class="btn-sec" style="font-size:12px;padding:7px 14px;" onclick="abrirDinosaurios()">Ver tipos de dinosaurios →</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ctitle">Datos que te van a volar la cabeza</div>
+    <div id="paleo-facts"></div>
+  </div>
+</div>
+
+<!-- ══ MODAL: PAUSA ══ -->
+<div class="modal" id="modal-pausa" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-emoji">🌿</div>
+    <div class="modal-title">Tómate un descanso</div>
+    <div class="modal-sub">Está perfecto parar cuando lo necesitas. ¿Cuánto tiempo de pausa quieres?</div>
+    <button class="btn" style="margin-bottom:8px;" onclick="tomarPausa(5)">5 minutos 🌟</button>
+    <button class="btn" style="margin-bottom:8px;background:linear-gradient(135deg,#1a6b4a,var(--teal));" onclick="tomarPausa(10)">10 minutos 🌿</button>
+    <button class="btn-sec" style="width:100%;" onclick="cerrarModalPausa()">Seguir estudiando ahora</button>
+  </div>
+</div>
+
+<!-- ══ MODAL: PAUSA CONTANDO ══ -->
+<div class="modal" id="modal-pausa-activa" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-emoji">⏳</div>
+    <div class="modal-title">Descansando...</div>
+    <div style="font-size:32px;font-family:monospace;color:var(--yellow);margin:12px 0;" id="pausa-countdown">5:00</div>
+    <div class="modal-sub">Respira. Toma agua. Mueve el cuerpo un poco.</div>
+    <button class="btn-sec" style="width:100%;" onclick="terminarPausa()">Ya descansé, continúo</button>
+  </div>
+</div>
+
+<!-- ══ MODAL: CONTINUAR SESIÓN ══ -->
+<div class="modal" id="modal-continuar" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-emoji">⏰</div>
+    <div class="modal-title">¿Seguimos aprendiendo?</div>
+    <div class="modal-sub" id="modal-continuar-texto">Llevas un rato estudiando. ¡Lo estás haciendo genial! ¿Qué quieres hacer?</div>
+    <button class="btn" style="margin-bottom:8px;" onclick="continuarSesion()">¡Sigo aprendiendo! 💪</button>
+    <button class="btn-sec" style="width:100%;margin-bottom:8px;" onclick="mostrarModalPausa()">Necesito una pausa</button>
+    <button class="btn-red" style="width:100%;" onclick="mostrarTestFin()">Terminar sesión de hoy</button>
+  </div>
+</div>
+
+<!-- ══ MODAL: LÍMITE 45 MIN ══ -->
+<div class="modal" id="modal-limite45" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-emoji">🦕</div>
+    <div class="modal-title">¡45 minutos en esta materia!</div>
+    <div class="modal-sub" id="limite45-texto">Has estado 45 minutos en esta materia. Para continuar, el profe IA propone repasar algo que te costó antes. ¿De acuerdo?</div>
+    <button class="btn" style="margin-bottom:8px;" onclick="continuarConActividad()">Sí, repaso lo atrasado 📚</button>
+    <button class="btn-sec" style="width:100%;" onclick="cerrarLimite45()">Volver a los bloques</button>
+  </div>
+</div>
+
+<!-- OVERLAY BLOQUEO NAVEGACIÓN -->
+<div id="overlay-bloqueo">
+  <div class="ob-box">
+    <div style="font-size:48px;margin-bottom:12px;">🔒</div>
+    <div style="font-family:'Fredoka One',sans-serif;font-size:20px;color:var(--red);margin-bottom:8px;">Página no permitida</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.6;">Esta plataforma es solo para aprender. Tu papá ya fue informado. Volvamos a la clase.</div>
+    <button class="btn" onclick="document.getElementById('overlay-bloqueo').style.display='none';goTo('s-bloques')">Volver a la plataforma</button>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<div class="nav">
+  <button class="btn-sec" style="font-size:11px;padding:6px 10px;" onclick="goTo('s-mood')">😊 Ánimo</button>
+  <button class="btn-sec" style="font-size:11px;padding:6px 10px;" onclick="goTo('s-bloques')">📚 Bloques</button>
+  <button class="btn-sec" style="font-size:11px;padding:6px 10px;" onclick="goTo('s-paleo')">🦕 Paleo</button>
+  <button class="btn-sec" style="font-size:11px;padding:6px 10px;color:var(--yellow);" onclick="mostrarTestFin()">📋 Terminar</button>
+</div>
+
+<script>
+
+// ══ VOZ ══
+let vozActiva = true;
+let vozVelocidad = 1.0;
+let vozHistorial = [];
+let vozIndexActual = -1;
+let utteranciaActual = null;
+let idiomaActual = { code:'es', vozLang:'es-CL' };
+
+const IDIOMA_CONFIG = {
+  es:{ vozLang:'es-CL', nota:'El profe IA explicará en español.', instruccion:'Enseña en español chileno natural, cálido y cercano.' },
+  en:{ vozLang:'en-US', nota:'The teacher will explain in English 🇺🇸', instruccion:'Teach in English. Simple vocabulary for a 14-year-old Chilean student. Compare with Spanish when helpful.' },
+  fr:{ vozLang:'fr-FR', nota:'Le prof expliquera en français 🇫🇷 — sin presión.', instruccion:"Enseigne en français simple. Catalina a de mauvais souvenirs avec cette langue — sois très patient. Utilise des exemples de dinosaures. Compare avec l'espagnol." },
+  zh:{ vozLang:'zh-CN', nota:'老师将用中文词汇教恐龙！🐉', instruccion:'Enseña en español pero introduce vocabulario chino de dinosaurios con pinyin. Ejemplo: 恐龙 (kǒng lóng) = dinosaurio. Es motivacional, no obligatorio.' }
+};
+
+function limpiarParaVoz(txt){
+  return (txt||'')
+    .replace(/\[\[VIDEO:[^\]]+\]\]/gi,'')
+    .replace(/\[\[BLOQUE_COMPLETADO\]\]/gi,'')
+    .replace(/\[IMG:[^\]]+\]/gi,'')
+    .replace(/\[OPC:[^\]]+\]/gi,'')
+    .replace(/\*{1,2}/g,'')
+    .replace(/_{1,2}/g,'')
+    .replace(/#{1,6}\s/g,'')
+    .replace(/`{1,3}/g,'')
+    .replace(/^[-*•]\s/gm,'')
+    .replace(/^\d+\.\s/gm,'')
+    .replace(/[—–]/g,', ')
+    .replace(/\.{2,}/g,'. ')
+    .replace(/\s{2,}/g,' ')
+    .trim();
+}
+
+function limpiarMarkdown(txt){
+  return (txt||'')
+    .replace(/\*{1,2}([^*]+)\*{1,2}/g,'$1')
+    .replace(/_{1,2}([^_]+)_{1,2}/g,'$1')
+    .replace(/#{1,6}\s/g,'')
+    .replace(/`{1,3}/g,'')
+    .replace(/^[-*•]\s/gm,'')
+    .replace(/^\d+\.\s/gm,'')
+    .trim();
+}
+
+function getBestVoice(lang){
+  const voces = speechSynthesis.getVoices();
+  const base = lang.split('-')[0];
+  const preferidas = voces.filter(v=>v.lang.startsWith(base) && !v.name.toLowerCase().includes('compact'));
+  const natural = preferidas.find(v=>v.name.toLowerCase().match(/natural|enhanced|premium|neural/));
+  const local = preferidas.find(v=>v.localService);
+  return natural || local || preferidas[0] || null;
+}
+
+function hablar(texto){
+  if(!vozActiva || !('speechSynthesis' in window)) return;
+  const limpio = limpiarParaVoz(texto);
+  if(!limpio) return;
+  vozHistorial.push(limpio);
+  vozIndexActual = vozHistorial.length - 1;
+  speechSynthesis.cancel();
+  utteranciaActual = new SpeechSynthesisUtterance(limpio);
+  utteranciaActual.lang = idiomaActual.vozLang;
+  utteranciaActual.rate = vozVelocidad;
+  utteranciaActual.pitch = 1.0;
+  utteranciaActual.volume = 1.0;
+  const voz = getBestVoice(idiomaActual.vozLang);
+  if(voz) utteranciaActual.voice = voz;
+  utteranciaActual.onstart = ()=>{ document.getElementById('voz-toggle').innerHTML='🔊 Hablando'; };
+  utteranciaActual.onend = utteranciaActual.onerror = ()=>{ const b=document.getElementById('voz-toggle'); if(b) b.innerHTML='🔊 Voz'; };
+  speechSynthesis.speak(utteranciaActual);
+}
+
+function detenerVoz(){
+  speechSynthesis.cancel();
+  const b=document.getElementById('voz-toggle');
+  if(b) b.innerHTML = vozActiva ? '🔊 Voz' : '🔇 Silencio';
+}
+
+function toggleVoz(){
+  vozActiva=!vozActiva;
+  speechSynthesis.cancel();
+  const b=document.getElementById('voz-toggle');
+  if(b){ b.innerHTML=vozActiva?'🔊 Voz':'🔇 Silencio'; b.classList.toggle('off',!vozActiva); }
+}
+
+function retroceder10(){
+  const lang = idiomaActual.vozLang;
+  function reproducir(texto){
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(texto);
+    u.lang=lang; u.rate=vozVelocidad; u.pitch=1.0; u.volume=1.0;
+    const v=getBestVoice(lang); if(v) u.voice=v;
+    utteranciaActual=u; speechSynthesis.speak(u);
+  }
+  if(speechSynthesis.speaking && vozIndexActual>=0){
+    reproducir(vozHistorial[vozIndexActual]);
+    notif('⏮ Repitiendo desde el inicio');
+  } else if(vozHistorial.length>0){
+    if(vozIndexActual>0) vozIndexActual--;
+    reproducir(vozHistorial[vozIndexActual]);
+    notif(vozIndexActual===0?'⏮ Primer mensaje':'⏮ Explicación anterior');
+  } else {
+    notif('El profe aún no ha hablado');
+  }
+}
+
+function setVelocidad(v, btn){
+  vozVelocidad=v;
+  document.querySelectorAll('.speed-btn').forEach(b=>b.classList.remove('activo'));
+  btn.classList.add('activo');
+  notif('🎙 Velocidad ajustada');
+}
+
+function setIdioma(code){
+  idiomaActual={ code, ...IDIOMA_CONFIG[code] };
+  document.querySelectorAll('.idioma-btn').forEach(b=>b.classList.remove('activo'));
+  const btn=document.getElementById('lang-'+code);
+  if(btn) btn.classList.add('activo');
+  const nota=document.getElementById('idioma-nota');
+  if(nota) nota.textContent=IDIOMA_CONFIG[code].nota;
+  speechSynthesis.cancel();
+}
+
+// Cargar voces async
+if(typeof speechSynthesis!=='undefined'){
+  speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices();
+  speechSynthesis.getVoices();
+}
+
+// ══ IMAGEN + EXPLICACIÓN INTEGRADA ══
+function mostrarVisualConExplicacion(query, explicacion, chatEl){
+  const imgUrl='https://source.unsplash.com/600x220/?'+encodeURIComponent(query);
+  const chat = chatEl || document.getElementById('chat');
+  const card=document.createElement('div');
+  card.className='visual-explicado';
+  const exp = limpiarMarkdown(explicacion||query);
+  card.innerHTML='<img src="'+imgUrl+'" alt="'+query+'" onerror="this.parentElement.style.display=&quot;none&quot;">'
+    +'<div class="visual-exp-box"><div class="visual-exp-av">🦖</div>'
+    +'<div class="visual-exp-txt">'+exp+'</div></div>';
+  chat.appendChild(card);
+  chat.scrollTop=chat.scrollHeight;
+  hablar(exp);
+}
+
+// ══ TAREA ══
+let tareaData=null;
+
+async function cargarTarea(input){
+  const file=input.files[0]; if(!file) return;
+  const drop=document.getElementById('tarea-drop');
+  const nombre=document.getElementById('tarea-nombre');
+  const btnT=document.getElementById('btn-tarea');
+  nombre.textContent='📄 '+file.name;
+  drop.classList.add('con-archivo');
+  if(file.type.startsWith('image/')){
+    const b64=await fileToBase64(file);
+    tareaData={tipo:'imagen',nombre:file.name,base64:b64.split(',')[1],mimeType:file.type};
+  } else {
+    const txt=await file.text().catch(()=>'');
+    tareaData={tipo:'texto',nombre:file.name,contenido:txt||'[archivo: '+file.name+']'};
+  }
+  if(btnT) btnT.style.display='block';
+  notif('✅ Tarea cargada: '+file.name);
+}
+
+function fileToBase64(file){
+  return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); });
+}
+
+function iniciarConTarea(){
+  if(!tareaData){ notif('⚠️ Sube tu tarea primero'); return; }
+  if(!API_KEY){ notif('⚠️ Ingresa la API Key'); return; }
+  state.claseActual={id:'tarea',name:'Tarea',sistema:buildSistemaTarea()};
+  state.chatHistory=[];
+  state.claseSecs=0;
+  vozHistorial=[]; vozIndexActual=-1;
+  document.getElementById('clase-icon').textContent='📎';
+  document.getElementById('clase-nombre').textContent='Tarea de Catalina';
+  document.getElementById('clase-sub').textContent='El profe te guía sin darte las respuestas';
+  document.getElementById('chat').innerHTML='';
+  document.getElementById('clase-fill').style.width='5%';
+  document.getElementById('clase-timer').textContent='00:00';
+  document.getElementById('clase-timer').classList.remove('alerta');
+  document.getElementById('card-atrasadas').style.display='none';
+  goTo('s-clase');
+  const badge=document.createElement('div');
+  badge.className='tarea-badge';
+  badge.innerHTML='<span>📎</span><span>Trabajando: <strong>'+tareaData.nombre+'</strong></span>';
+  document.getElementById('chat').appendChild(badge);
+  const sistemaTarea=buildSistemaTarea();
+  let primerMsg;
+  if(tareaData.tipo==='imagen'){
+    state.chatHistory.push({role:'user',content:[
+      {type:'image',source:{type:'base64',media_type:tareaData.mimeType,data:tareaData.base64}},
+      {type:'text',text:'[TAREA EN IMAGEN] Analiza esta tarea de Catalina. Identifica qué materia es y comienza a guiarla paso a paso con tu método socrático. NUNCA des la respuesta directamente.'}
+    ]});
+  } else {
+    primerMsg='[TAREA DE CATALINA]\nArchivo: '+tareaData.nombre+'\nContenido:\n'+tareaData.contenido+'\n\nAnaliza esta tarea, identifica la materia y comienza a guiar a Catalina paso a paso. NUNCA des la respuesta directamente.';
+    state.chatHistory.push({role:'user',content:primerMsg});
+  }
+  mostrarTypingIA();
+  llamarIA(state.chatHistory, sistemaTarea, resp=>{
+    state.chatHistory.push({role:'assistant',content:resp});
+    quitarTypingIA();
+    procesarYMostrarRespuesta(resp);
+  });
+}
+
+function buildSistemaTarea(){
+  return `Eres el Profe IA de Catalina, 14 años, TDAH+TEA, 8° básico Chile. Le apasionan los dinosaurios y la paleontología.
+
+MODO TAREA — MÉTODO SOCRÁTICO:
+Tu misión es ENSEÑAR a Catalina a resolver su tarea, JAMÁS resolverla por ella.
+
+1. ANALIZA: dile de qué trata la tarea en 1-2 oraciones entusiastas.
+2. PREGUNTA PRIMERO: ¿Por dónde crees que podemos empezar?
+3. GUÍA paso a paso: para cada ejercicio, pregunta antes de explicar.
+4. Si se EQUIVOCA: pista + nuevo ejemplo de dinos. NUNCA la respuesta.
+5. Si INSISTE en la respuesta: No te la doy, cuando lo descubras tú, no lo olvidarás nunca.
+6. CELEBRA cada paso que ella resuelva sola.
+7. Al TERMINAR: pídele que explique el procedimiento con sus propias palabras.
+
+REGLAS: NUNCA des respuestas directas. SIEMPRE termina con pregunta. Máx 3 oraciones. Tono amigable. Ejemplos de dinosaurios cuando puedas.
+` + ((idiomaActual && idiomaActual.instruccion) || '');
+}
+
+
+// ══ CONFIGURACIÓN ══
+const EMAIL_SVC  = "service_6tb2das";
+const EMAIL_TPL  = "template_y4c0aas";
+const EMAIL_KEY  = "HWOFrv8sGOcNtW9Ti";
+const TUTOR_EMAIL = "dapikanzi@hotmail.com";
+const TUTOR_EMAIL2 = "margarita2883@gmail.com";
+
+let API_KEY = localStorage.getItem('cat_api_key') || '';
+
+try { emailjs.init(EMAIL_KEY); } catch(e){}
+
+// ══ ESTADO GLOBAL ══
+let state = {
+  mood:'', moodEmoji:'😊', moodNivel:3, concentracion:3, energia:3,
+  bloques:{ math:false, lengua:false, historia:false, ciencias:false },
+  paleoBloqueada:true,
+  sesionSecs:0, claseSecs:0,
+  claseActual:null, chatHistory:[],
+  paleoHistory:[],
+  minutosAlert:30,
+  pausaInterval:null,
+  log:{ materias:[], correctas:0, total:0, alertas:[], testFin:{}, testInicio:{} },
+  sesionActiva:false
+};
+
+// ══ PERSISTENCIA SEMANAL ══
+function guardarEstadistica() {
+  const semana = obtenerSemana();
+  let hist = JSON.parse(localStorage.getItem('cat_hist')||'{}');
+  if(!hist[semana]) hist[semana]=[];
+  hist[semana].push({
+    fecha: new Date().toLocaleString('es-CL'),
+    mood: state.log.estadoAnimico,
+    concentracion: state.concentracion,
+    energia: state.energia,
+    materias: state.log.materias,
+    tiempoMin: Math.floor(state.sesionSecs/60),
+    testFin: state.log.testFin,
+    alertas: state.log.alertas
+  });
+  // Limpiar semanas antiguas (conservar solo las últimas 8 semanas)
+  const semanas = Object.keys(hist).sort();
+  if(semanas.length > 8) {
+    semanas.slice(0, semanas.length-8).forEach(s=>delete hist[s]);
+  }
+  localStorage.setItem('cat_hist', JSON.stringify(hist));
+}
+
+function obtenerSemana() {
+  const d=new Date(), onejan=new Date(d.getFullYear(),0,1);
+  return d.getFullYear()+'-W'+Math.ceil((((d-onejan)/86400000)+onejan.getDay()+1)/7);
+}
+
+// ══ REPORTE DOMINICAL AUTO ══
+function verificarReporteDominical() {
+  const hoy=new Date(), dia=hoy.getDay();
+  if(dia===0) {
+    const clave='cat_rep_'+obtenerSemana();
+    if(!localStorage.getItem(clave)){
+      localStorage.setItem(clave,'1');
+      setTimeout(()=>enviarReporteWeekly(),3000);
+    }
+    // Limpiar claves cat_rep_ antiguas (conservar solo las últimas 8 semanas)
+    try {
+      const keys = Object.keys(localStorage).filter(k=>k.startsWith('cat_rep_'));
+      if(keys.length > 8) {
+        keys.sort().slice(0, keys.length-8).forEach(k=>localStorage.removeItem(k));
+      }
+    } catch(e){}
+  }
+}
+
+async function enviarReporteWeekly() {
+  try {
+  const semana=obtenerSemana();
+  const hist=JSON.parse(localStorage.getItem('cat_hist')||'{}');
+  const datos=hist[semana]||[];
+  if(!datos.length) return;
+  const totalMins=datos.reduce((s,d)=>s+(d.tiempoMin||0),0);
+  const estados=datos.map(d=>d.mood||'N/A').join(', ');
+  const materias=[...new Set(datos.flatMap(d=>d.materias||[]))].join(', ');
+  const cuerpo='REPORTE SEMANAL - '+semana+' | Sesiones: '+datos.length+' | Tiempo: '+totalMins+' min | Estados: '+estados+' | Materias: '+materias;
+  await enviarEmail('Reporte semanal '+semana, cuerpo, [TUTOR_EMAIL, TUTOR_EMAIL2]);
+  } catch(e){ console.log('Error reporte semanal:',e); }
+}
+
+// ══ BLOQUEO DE NAVEGACIÓN EXTERNA ══
+(function bloqueoNavegacion(){
+  // Bloquear popups
+  const _open = window.open.bind(window);
+  const URLS_PERMITIDAS = ['source.unsplash.com','youtube.com/embed','youtube.com/watch','youtu.be','fishersci.es/es/es/periodic-table.html','revista.unam.mx/vol.2/num4/sabias1/tipos.html','epja.mineduc.cl/wp-content/uploads/sites/43/2019/06/','es.slideshare.net/slideshow/ppt-transformacionesisometricasgeometria8basicoayb'];
+  window.open = function(url, ...args){
+    if(url && !url.includes(location.hostname)){
+      const permitida = URLS_PERMITIDAS.some(u=>url.includes(u));
+      if(!permitida){
+        reportarIntento('popup:'+url);
+        return null;
+      }
+    }
+    return _open.apply(window, [url, ...args]);
+  };
+  // Bloquear alert/confirm/prompt de scripts externos
+  window.alert = function(msg){ console.warn('Alert bloqueado:', msg); };
+  window.confirm = function(msg){ console.warn('Confirm bloqueado:', msg); return false; };
+  window.prompt = function(msg){ console.warn('Prompt bloqueado:', msg); return null; };
+  // Interceptar clicks en links externos
+  document.addEventListener('click', function(e){
+    let el = e.target;
+    while(el && el.tagName!=='A') el=el.parentElement;
+    if(el && el.tagName==='A'){
+      const href=el.getAttribute('href')||'';
+      if(href.startsWith('http') && !href.includes(location.hostname)){
+        e.preventDefault();
+        reportarIntento('link:'+href);
+        mostrarBloqueNavegacion(href);
+      }
+    }
+  }, true);
+})();
+
+function mostrarBloqueNavegacion(url){
+  const ov=document.getElementById('overlay-bloqueo');
+  ov.style.display='flex';
+  reportarIntento('nav_bloqueada:'+url);
+}
+
+async function reportarIntento(detalle){
+  try {
+  state.log.alertas.push(detalle+' @ '+new Date().toLocaleTimeString('es-CL'));
+  const cuerpo='ALERTA DE SEGURIDAD - Plataforma Catalina | Fecha: '+new Date().toLocaleString('es-CL')+' | Detalle: '+detalle+' | Materia activa: '+((state.claseActual && state.claseActual.name)||'ninguna')+' | Animo: '+(state.log.estadoAnimico||'N/A');
+  await enviarEmail('🚨 ALERTA navegación Catalina', cuerpo, [TUTOR_EMAIL]);
+  } catch(e){ console.log('Error alerta:',e); }
+}
+
+// ══ ESTRELLAS ══
+(function(){
+  const s=document.getElementById('stars');
+  for(let i=0;i<50;i++){
+    const d=document.createElement('div'); d.className='star';
+    const sz=Math.random()*2+1;
+    d.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${2+Math.random()*4}s;--dl:${Math.random()*4}s;--op:${0.2+Math.random()*0.5}`;
+    s.appendChild(d);
+  }
+})();
+
+// ══ NAVEGACION ══
+function goTo(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+  if(id!=='s-clase') detenerVoz();
+  if(id==='s-bloques') renderBloques();
+  if(id==='s-paleo') iniciarPaleo();
+}
+
+// ══ API KEY ══
+function guardarApiKey(val){
+  val = val.trim();
+  const status = document.getElementById('apikey-status');
+  const btn = document.getElementById('btn-iniciar');
+  if(val.startsWith('sk-ant') && val.length > 20){
+    API_KEY = val;
+    localStorage.setItem('cat_api_key', val);
+    status.textContent = '✅ Key válida guardada';
+    status.style.color = 'var(--green)';
+    // habilitar botón si también hay mood seleccionado
+    if(state.mood) btn.disabled = false;
+  } else if(val.length > 5) {
+    status.textContent = '⚠️ Debe comenzar con sk-ant-api03-...';
+    status.style.color = 'var(--yellow)';
+  } else {
+    status.textContent = '';
+  }
+}
+function toggleApiKeyVisible(){
+  const inp = document.getElementById('apikey-input');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+// ══ INICIO SESIÓN ══
+function iniciarSesion(){
+  // Leer key del campo visible O del localStorage — en ese orden
+  const inp = document.getElementById('apikey-input');
+  const keyFromField = inp ? inp.value.trim() : '';
+  const keyFromStorage = localStorage.getItem('cat_api_key') || '';
+  if(keyFromField.length > 10) {
+    API_KEY = keyFromField;
+  } else if(keyFromStorage.length > 10) {
+    API_KEY = keyFromStorage;
+    if(inp) inp.value = API_KEY; // restaurar al campo
+  }
+  if(!API_KEY || API_KEY.length < 10){ notif('⚠️ Ingresa la API Key arriba para comenzar','alerta'); return; }
+  state.sesionActiva=true;
+  iniciarRelojSesion();
+  goTo('s-bloques');
+}
+
+// ══ ESTADO ANIMICO ══
+function setMood(el, emoji, label, nivel, tip){
+  document.querySelectorAll('.mb').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+  state.mood=label; state.moodEmoji=emoji; state.moodNivel=nivel;
+  state.log.estadoAnimico=emoji+' '+label;
+  document.getElementById('mood-tip').innerHTML=`<strong style="color:var(--purple2)">🤖 Profe IA:</strong> ${tip}`;
+  // Habilitar botón siempre al seleccionar ánimo
+  document.getElementById('btn-iniciar').disabled = false;
+  document.getElementById('av-bloques').textContent=emoji;
+  document.getElementById('blq-greeting').textContent=`¡Hola, Catalina! ${emoji}`;
+  // Ajuste dinámico de duración según ánimo
+  // nivel 1=Genial->45min, 2=Bien->40min, 3=Regular->30min, 4=Cansada->20min, 5=Difícil->15min
+  const tiempos=[45,40,30,20,15];
+  state.minutosAlert=tiempos[nivel-1];
+  state.minutosClaseMax=tiempos[nivel-1];
+}
+
+// ══ RELOJ SESIÓN ══
+let sesionInterval=null;
+function iniciarRelojSesion(){
+  if(sesionInterval) return;
+  sesionInterval=setInterval(()=>{
+    state.sesionSecs++;
+    const m=Math.floor(state.sesionSecs/60), s=state.sesionSecs%60;
+    const t=m+':'+(s<10?'0':'')+s;
+    document.getElementById('session-clock').textContent=t;
+    if(state.sesionSecs>0 && state.sesionSecs%(state.minutosAlert*60)===0){
+      mostrarModalContinuar();
+    }
+    if(state.sesionSecs===20*60) mostrarModal20min();
+  },1000);
+}
+
+// ══ MODAL PAUSA ══
+function mostrarModalPausa(){
+  document.getElementById('modal-pausa').style.display='flex';
+}
+function cerrarModalPausa(){
+  document.getElementById('modal-pausa').style.display='none';
+}
+function tomarPausa(mins){
+  document.getElementById('modal-pausa').style.display='none';
+  document.getElementById('modal-continuar').style.display='none';
+  let secs=mins*60;
+  document.getElementById('modal-pausa-activa').style.display='flex';
+  actualizarCountdown(secs);
+  state.pausaInterval=setInterval(()=>{
+    secs--;
+    if(secs<=0){ terminarPausa(); return; }
+    actualizarCountdown(secs);
+  },1000);
+}
+function actualizarCountdown(s){
+  const m=Math.floor(s/60),sec=s%60;
+  document.getElementById('pausa-countdown').textContent=m+':'+(sec<10?'0':'')+sec;
+}
+function terminarPausa(){
+  clearInterval(state.pausaInterval);
+  document.getElementById('modal-pausa-activa').style.display='none';
+  notif('¡Bienvenida de vuelta, Catalina! 🌟');
+}
+
+// ══ MODAL CONTINUAR ══
+function mostrarModal20min(){
+  const modal=document.getElementById('modal-continuar');
+  if(!modal||modal.style.display==='flex') return;
+  const box=modal.querySelector('.modal-box');
+  if(box) box.innerHTML='<div class="modal-emoji">🏆</div><div class="modal-title">¡20 minutos aprendiendo!</div><div class="modal-sub">¡Catalina, eres increíble! Llevas 20 minutos con '+((state.claseActual && state.claseActual.name)||'la clase')+'.<br>¿Quieres seguir explorando?</div><button class="btn" style="margin-bottom:8px;background:linear-gradient(135deg,#1D9E75,var(--green));" onclick="seguir10mins()">🦕 ¡10 minutos más!</button><button class="btn-sec" style="width:100%;margin-bottom:8px;" onclick="mostrarModalPausa()">⏸ Necesito una pausa</button><button class="btn-red" style="width:100%;" onclick="mostrarTestFin()">Terminar sesión</button>';
+  modal.style.display='flex';
+  enviarReporte('🏆 Catalina completó 20 minutos estudiando '+( (state.claseActual && state.claseActual.name)||''));
+}
+function seguir10mins(){
+  document.getElementById('modal-continuar').style.display='none';
+  state.minutosAlert=Math.floor(state.sesionSecs/60)+10;
+  notif('🦕 ¡Vamos por 10 minutos más!');
+}
+function mostrarModalContinuar(){
+  const mins = Math.floor(state.sesionSecs/60);
+  const el = document.getElementById('modal-continuar-texto');
+  if(el) el.textContent = `Llevas ${mins} minutos estudiando. ¡Lo estás haciendo genial! ¿Qué quieres hacer?`;
+  document.getElementById('modal-continuar').style.display='flex';
+}
+function continuarSesion(){
+  document.getElementById('modal-continuar').style.display='none';
+  state.minutosAlert+=30;
+  notif('¡Excelente, Catalina! Seguimos aprendiendo 💪');
+}
+
+
+// ══ TEST FIN DE SESIÓN ══
+const testPreguntas=[
+  { id:'q1', texto:'¿Cómo te sientes al terminar la sesión de hoy?', opts:['🌟 Muy bien','😊 Bien','😐 Regular','😔 Cansada'] },
+  { id:'q2', texto:'¿Qué materia te gustó más hoy?', opts:['📐 Matemáticas','📖 Lengua','🗺️ Historia','🔬 Ciencias','🦕 Paleontología'] },
+  { id:'q3', texto:'¿Qué parte te costó más?', opts:['Entender la explicación','Los ejercicios','Concentrarme','Nada, estuvo fácil'] },
+  { id:'q4', texto:'¿Cómo prefieres que sean las próximas clases?', opts:['Más cortitas','Más largas','Con más ejemplos de dinosaurios','Con más ejercicios prácticos','Igual que hoy'] },
+  { id:'q5', texto:'¿Algo que quieras decirle al profe IA?', opts:['¡Estuvo genial!','Más despacio por favor','Más difícil, me aburrí','Estoy aprendiendo mucho','No sé'] }
+];
+
+let testRespuestas={};
+
+function mostrarTestFin(){
+  document.getElementById('modal-continuar').style.display='none';
+  testRespuestas={};
+  const cont=document.getElementById('test-preguntas');
+  cont.innerHTML='';
+  testPreguntas.forEach(p=>{
+    const div=document.createElement('div');
+    div.style.marginBottom='18px';
+    div.innerHTML=`<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:8px;">${p.texto}</div>`;
+    p.opts.forEach(op=>{
+      const btn=document.createElement('div');
+      btn.className='test-opt';
+      btn.textContent=op;
+      btn.onclick=function(){
+        div.querySelectorAll('.test-opt').forEach(b=>b.classList.remove('sel'));
+        btn.classList.add('sel');
+        testRespuestas[p.id]=op;
+        verificarTestCompleto();
+      };
+      div.appendChild(btn);
+    });
+    cont.appendChild(div);
+  });
+  document.getElementById('btn-enviar-test').disabled=true;
+  goTo('s-test-fin');
+}
+
+function verificarTestCompleto(){
+  const completo=Object.keys(testRespuestas).length>=testPreguntas.length;
+  document.getElementById('btn-enviar-test').disabled=!completo;
+}
+
+function enviarTestFin(){
+  state.log.testFin=testRespuestas;
+  guardarEstadistica();
+  // Enviar reporte con análisis IA del test
+  generarAnalisisYEnviar();
+  notif('✅ ¡Gracias, Catalina! Tu profe IA aprende de ti cada día 🌟');
+  setTimeout(()=>{ goTo('s-mood'); reiniciarSesion(); }, 2500);
+}
+
+async function generarAnalisisYEnviar(){
+  const resumen=Object.entries(testRespuestas).map(([k,v])=>{ const p=testPreguntas.find(x=>x.id===k); return `${(p && p.texto)}: ${v}`; }).join('\n');
+  const sesInfo=`Ánimo inicio: ${state.log.estadoAnimico||'N/A'} | Concentración: ${state.concentracion}/5 | Energía: ${state.energia}/5 | Tiempo: ${Math.floor(state.sesionSecs/60)} min | Materias: ${state.log.materias.join(', ')||'ninguna'}`;
+  let analisis='';
+  try {
+    const msgs=[{role:'user',content:`Analiza brevemente este test de fin de sesión de Catalina (14 años, TDAH+TEA) para su padre tutor. Sé conciso, práctico y amable. Indica 1-2 ajustes concretos para la próxima sesión.\n\nINFO SESIÓN:\n${sesInfo}\n\nRESPUESTAS TEST:\n${resumen}`}];
+    const resp=await llamarIADirecta(msgs,'Eres un psicólogo educativo especializado en TDAH y TEA. Responde en español, máx 150 palabras, estructura: 1) Estado emocional 2) Lo que funcionó 3) Ajustes sugeridos para próxima sesión.');
+    analisis=resp;
+  } catch(e){ analisis='(Análisis IA no disponible)'; }
+  const cuerpo=`📚 REPORTE SESIÓN — ${new Date().toLocaleString('es-CL')}
+  
+${sesInfo}
+
+TEST FIN DE SESIÓN:
+${resumen}
+
+ANÁLISIS DEL PROFE IA:
+${analisis}`;
+  await enviarEmail('Reporte sesión Catalina — '+new Date().toLocaleDateString('es-CL'), cuerpo, [TUTOR_EMAIL, TUTOR_EMAIL2]);
+}
+
+function reiniciarSesion(){
+  if(sesionInterval){ clearInterval(sesionInterval); sesionInterval=null; }
+  if(claseInterval){ clearInterval(claseInterval); claseInterval=null; }
+  if(state.pausaInterval){ clearInterval(state.pausaInterval); state.pausaInterval=null; }
+  state={...state, mood:'', moodEmoji:'😊', moodNivel:3, concentracion:3, energia:3,
+    bloques:{math:false,lengua:false,historia:false,ciencias:false},
+    paleoBloqueada:true, sesionSecs:0, claseSecs:0,
+    claseActual:null, chatHistory:[], paleoHistory:[],
+    minutosAlert:30, sesionActiva:false,
+    log:{materias:[],correctas:0,total:0,alertas:[],testFin:{},testInicio:{}}
+  };
+  document.getElementById('session-clock').textContent='00:00';
+}
+
+// ══ BLOQUES ══
+const bloquesConfig=[
+  { id:'math', icon:'📐', name:'Matemáticas', desc:'Funciones lineales, geometría y transformaciones isométricas', pony:'Twilight Sparkle',
+    recurso_geometria:'https://epja.mineduc.cl/wp-content/uploads/sites/43/2019/06/Gu%C3%ADa-N%C2%B0-5-Matem%C3%A1tica-Geometr%C3%ADa.pdf',
+    sistema:`Eres el Profe IA de Catalina — su profesor personal, cercano y entusiasta. Catalina tiene 14 años, TDAH combinado + TEA, 8° básico Chile. Le apasionan los dinosaurios, la paleontología y la geología.
+
+PERSONALIDAD: Eres cálido, divertido, paciente. Tratas a Catalina como alguien inteligente. Hablas en español natural, no formal. Máximo 1-2 emojis por mensaje.
+
+MÉTODO OBLIGATORIO — SIGUE ESTE CICLO EN CADA MENSAJE:
+1. ENGANCHA con algo curioso sobre dinosaurios o geología relacionado al tema.
+2. EXPLICA en máximo 3 oraciones. Una idea a la vez, nunca todo de golpe.
+3. VERIFICA terminando SIEMPRE con una pregunta directa a Catalina.
+4. REACCIONA a lo que ella responde: si está bien, celébralo. Si se equivoca, corrige con humor y cariño.
+5. AVANZA al siguiente concepto solo cuando confirmes que entendió.
+6. Cada 3-4 intercambios, propón UN ejercicio concreto con contexto de fósiles o geología.
+
+REGLAS:
+- NUNCA más de 4 oraciones seguidas.
+- SIEMPRE termina con pregunta o acción para Catalina.
+- Si dice "no entiendo", cambia de analogía completamente — más simple.
+- Si detectas desánimo, para y motiva con algo de dinosaurios.
+- NUNCA inventes datos. Si no sabes, dilo.
+- Cuando Catalina complete el bloque, escribe [[BLOQUE_COMPLETADO]] al final.
+- Cuando un concepto sea visual y complejo, escribe [[VIDEO:tema]] para mostrar un video de apoyo.
+CONTENIDOS DISPONIBLES: Función lineal f(x)=mx (pasa por origen). Función afín f(x)=mx+n. Notación f(x). Dominio y recorrido. Pendiente m=(y2-y1)/(x2-x1); m>0 creciente, m<0 decreciente. Función constante si m=0. Recta vertical = pendiente indefinida. Paralelas: m1=m2. Perpendiculares: m1×m2=-1. Tabla de valores → plano cartesiano. Polígonos y fórmulas de área/perímetro. Semejanza (LLL,AA,LAL,LLA). Thales. Isometrías: traslación P'(x+a,y+b), rotación 90°→(-y,x) 180°→(-x,-y) 270°→(y,-x), simetría axial, simetría central=rotación 180°. Teselan: triángulo, cuadrado, hexágono. Volumen: prisma V=Abase×h, pirámide V=(1/3)Abase×h.` },
+  { id:'lengua', icon:'📖', name:'Lengua y Literatura', desc:'Texto argumentativo y análisis literario', pony:'Rarity',
+    sistema:`Eres el Profe IA de Catalina — su profesor personal, cercano y entusiasta. Catalina tiene 14 años, TDAH combinado + TEA, 8° básico Chile. Le apasionan los dinosaurios, la paleontología y la geología.
+
+PERSONALIDAD: Eres cálido, divertido, paciente. Tratas a Catalina como alguien inteligente. Hablas en español natural, no formal. Máximo 1-2 emojis por mensaje.
+
+MÉTODO OBLIGATORIO — SIGUE ESTE CICLO EN CADA MENSAJE:
+1. ENGANCHA con algo curioso sobre dinosaurios o geología relacionado al tema.
+2. EXPLICA en máximo 3 oraciones. Una idea a la vez, nunca todo de golpe.
+3. VERIFICA terminando SIEMPRE con una pregunta directa a Catalina.
+4. REACCIONA a lo que ella responde: si está bien, celébralo. Si se equivoca, corrige con humor y cariño.
+5. AVANZA al siguiente concepto solo cuando confirmes que entendió.
+6. Cada 3-4 intercambios, propón UN ejercicio concreto con contexto de fósiles o geología.
+
+REGLAS:
+- NUNCA más de 4 oraciones seguidas.
+- SIEMPRE termina con pregunta o acción para Catalina.
+- Si dice "no entiendo", cambia de analogía completamente — más simple.
+- Si detectas desánimo, para y motiva con algo de dinosaurios.
+- NUNCA inventes datos. Si no sabes, dilo.
+- Cuando Catalina complete el bloque, escribe [[BLOQUE_COMPLETADO]] al final.
+- Cuando un concepto sea visual y complejo, escribe [[VIDEO:tema]] para mostrar un video de apoyo.
+CONTENIDOS DISPONIBLES: Texto argumentativo (tesis=afirmación/postura, argumentos, conclusión). Tipos: ensayo, carta al director, artículo de opinión. Narrador: 1ra persona, 3ra omnisciente, 3ra observador. Conflicto, clímax, tema. Figuras: metáfora (sin "como"), símil (con "como"), hipérbole (exageración), personificación. Comprensión: idea principal, inferencia (deducir implícito), vocabulario contextual. Género lírico: poema, verso (línea), estrofa (grupo de versos), rima, verso libre. Escritura: planificación→borrador→revisión→edición. Coherencia y conectores. Acentuación: agudas, graves, esdrújulas, tilde diacrítica (él/el, tú/tu).` },
+  { id:'historia', icon:'🗺️', name:'Historia', desc:'Humanismo, conquista y línea de tiempo geológica', pony:'Applejack',
+    sistema:`Eres el Profe IA de Catalina — su profesor personal, cercano y entusiasta. Catalina tiene 14 años, TDAH combinado + TEA, 8° básico Chile. Le apasionan los dinosaurios, la paleontología y la geología.
+
+PERSONALIDAD: Eres cálido, divertido, paciente. Tratas a Catalina como alguien inteligente. Hablas en español natural, no formal. Máximo 1-2 emojis por mensaje.
+
+MÉTODO OBLIGATORIO — SIGUE ESTE CICLO EN CADA MENSAJE:
+1. ENGANCHA con algo curioso sobre dinosaurios o geología relacionado al tema.
+2. EXPLICA en máximo 3 oraciones. Una idea a la vez, nunca todo de golpe.
+3. VERIFICA terminando SIEMPRE con una pregunta directa a Catalina.
+4. REACCIONA a lo que ella responde: si está bien, celébralo. Si se equivoca, corrige con humor y cariño.
+5. AVANZA al siguiente concepto solo cuando confirmes que entendió.
+6. Cada 3-4 intercambios, propón UN ejercicio concreto con contexto de fósiles o geología.
+
+REGLAS:
+- NUNCA más de 4 oraciones seguidas.
+- SIEMPRE termina con pregunta o acción para Catalina.
+- Si dice "no entiendo", cambia de analogía completamente — más simple.
+- Si detectas desánimo, para y motiva con algo de dinosaurios.
+- NUNCA inventes datos. Si no sabes, dilo.
+- Cuando Catalina complete el bloque, escribe [[BLOQUE_COMPLETADO]] al final.
+- Cuando un concepto sea visual y complejo, escribe [[VIDEO:tema]] para mostrar un video de apoyo.
+CONTENIDOS DISPONIBLES: Humanismo/Renacimiento: teocentrismo→antropocentrismo, Erasmo, Maquiavelo, Leonardo, Gutenberg 1440. Reforma: Lutero 1517, indulgencias, protestantes, Concilio de Trento. Monarquías absolutas: Luis XIV. Conquista: Colón 1492, encomienda (trabajo indígena para español), mita (trabajo forzado en minería, era inca), virreinatos, resistencia indígena, esclavitud africana. Ilustración: Rousseau (contrato social), Montesquieu (separación de poderes), Locke (derechos naturales). Revolución Francesa 1789: Luis XVI, guillotina, libertad/igualdad/fraternidad, Declaración de Derechos. Revolución Americana 1776: colonias vs Inglaterra. Periodización histórica. Historiografía.` },
+  { id:'ciencias', icon:'🔬', name:'Ciencias Naturales', desc:'Biología, química y geología básica', pony:'Twilight Sparkle',
+    recurso_tabla:'https://www.fishersci.es/es/es/periodic-table.html',
+    sistema:`Eres el Profe IA de Catalina — su profesor personal, cercano y entusiasta. Catalina tiene 14 años, TDAH combinado + TEA, 8° básico Chile. Le apasionan los dinosaurios, la paleontología y la geología.
+
+PERSONALIDAD: Eres cálido, divertido, paciente. Tratas a Catalina como alguien inteligente. Hablas en español natural, no formal. Máximo 1-2 emojis por mensaje.
+
+MÉTODO OBLIGATORIO — SIGUE ESTE CICLO EN CADA MENSAJE:
+1. ENGANCHA con algo curioso sobre dinosaurios o geología relacionado al tema.
+2. EXPLICA en máximo 3 oraciones. Una idea a la vez, nunca todo de golpe.
+3. VERIFICA terminando SIEMPRE con una pregunta directa a Catalina.
+4. REACCIONA a lo que ella responde: si está bien, celébralo. Si se equivoca, corrige con humor y cariño.
+5. AVANZA al siguiente concepto solo cuando confirmes que entendió.
+6. Cada 3-4 intercambios, propón UN ejercicio concreto con contexto de fósiles o geología.
+
+REGLAS:
+- NUNCA más de 4 oraciones seguidas.
+- SIEMPRE termina con pregunta o acción para Catalina.
+- Si dice "no entiendo", cambia de analogía completamente — más simple.
+- Si detectas desánimo, para y motiva con algo de dinosaurios.
+- NUNCA inventes datos. Si no sabes, dilo.
+- Cuando Catalina complete el bloque, escribe [[BLOQUE_COMPLETADO]] al final.
+- Cuando un concepto sea visual y complejo, escribe [[VIDEO:tema]] para mostrar un video de apoyo.
+CONTENIDOS DISPONIBLES: Célula=unidad de vida. Partes: membrana, citoplasma, núcleo, orgánulos. Procariota (sin núcleo) vs eucariota. Vegetal: cloroplasto (fotosíntesis) + pared celular. Mitosis: interfase (duplica ADN)→profase→metafase→anafase→telofase→2 células idénticas. Meiosis=células sexuales. ADN=información genética. Gen=segmento ADN que codifica proteína. Alelos: dominante/recesivo. Mendel. Darwin: selección natural, adaptación, fósiles como evidencia. Fecundación: óvulo+espermatozoide=cigoto (trompas de Falopio). Tabla periódica: grupos (columnas=propiedades similares), períodos (filas=niveles energía), número atómico=protones, metales vs no metales. Átomo: protón(+), neutrón, electrón(-). Enlace covalente=comparte e⁻, iónico=transfiere. Reacciones: reactantes→productos, conservación masa, síntesis/descomposición/sustitución, exotérmica/endotérmica. Newton: 1ra=inercia, 2da=F=ma, 3ra=acción-reacción. Ec=½mv², Ep=mgh.` }
+];
+
+// ══ RECURSOS EXTERNOS ══
+function abrirTablaConfirm(){
+  const url='https://www.fishersci.es/es/es/periodic-table.html';
+  if(!window.open(url,'_blank')) notif('📋 Abre: fishersci.es/es/es/periodic-table.html');
+}
+function abrirFuncionLineal(){
+  const url='https://epja.mineduc.cl/wp-content/uploads/sites/43/2019/06/Gu%C3%ADa-N%C2%B0-4-Matem%C3%A1tica-Funci%C3%B3n-lineal-y-af%C3%ADn.pdf';
+  if(!window.open(url,'_blank')) notif('📋 Abre la Guía de Función Lineal Mineduc desde el link del profe.');
+}
+function abrirIsometrias(){
+  const url='https://es.slideshare.net/slideshow/ppt-transformacionesisometricasgeometria8basicoayb/250550218';
+  if(!window.open(url,'_blank')) notif('📋 Abre el PPT de Transformaciones Isométricas 8° básico.');
+}
+function abrirGeometria(){
+  const url='https://epja.mineduc.cl/wp-content/uploads/sites/43/2019/06/Gu%C3%ADa-N%C2%B0-5-Matem%C3%A1tica-Geometr%C3%ADa.pdf';
+  if(!window.open(url,'_blank')) notif('📋 Abre la Guía de Geometría Mineduc desde el link del profe.');
+}
+function abrirDinosaurios(){
+  const url='https://www.revista.unam.mx/vol.2/num4/sabias1/tipos.html';
+  if(!window.open(url,'_blank')) notif('📋 Abre: revista.unam.mx/vol.2/num4/sabias1/tipos.html');
+}
+
+
+
+// ══ SISTEMA DE VIDEOS EDUCATIVOS ══
+const VIDEOS = {
+  math: {
+    'función lineal': {
+      id: 'l3dCXFYaP4I',
+      titulo: '¿Qué es una función lineal?',
+      desc: 'Explicación visual de función lineal f(x)=mx con ejemplos paso a paso',
+      tags: ['función','pendiente','gráfica','f(x)=mx']
+    },
+    'función afín': {
+      id: 'BQu8hLBrZqY',
+      titulo: 'Función afín f(x)=mx+n',
+      desc: 'Diferencia entre función lineal y afín, pendiente y coeficiente de posición',
+      tags: ['afín','f(x)=mx+n','pendiente','n']
+    },
+    'pendiente': {
+      id: 'jBea0zHE7Hc',
+      titulo: 'Cálculo de pendiente entre dos puntos',
+      desc: 'Fórmula m=(y2-y1)/(x2-x1) con ejemplos visuales y en plano cartesiano',
+      tags: ['pendiente','m=','y2-y1','recta']
+    },
+    'traslación': {
+      id: 'KGUGNBXqVXo',
+      titulo: 'Traslación isométrica — Geometría 8°',
+      desc: 'Transformación que mueve figuras usando un vector sin cambiar forma ni tamaño',
+      tags: ['traslación','vector','isometría','geometría']
+    },
+    'rotación': {
+      id: 'C8hVWqW_5P8',
+      titulo: 'Rotación de figuras en el plano',
+      desc: 'Rotación 90°, 180°, 270° respecto al origen. Fórmulas con ejemplos',
+      tags: ['rotación','90°','180°','isometría']
+    },
+    'simetría': {
+      id: 'nkDmyv6HWEY',
+      titulo: 'Simetría axial y central',
+      desc: 'Reflexión respecto a un eje y simetría respecto a un punto. Ejemplos visuales',
+      tags: ['simetría','reflexión','eje','isometría']
+    },
+    'semejanza thales': {
+      id: 'pMqrNBPEMjc',
+      titulo: 'Semejanza de triángulos y Teorema de Thales',
+      desc: 'Criterios LLL, AA, LAL, LLA. Thales y proporcionalidad de segmentos',
+      tags: ['semejanza','Thales','triángulo','proporcional']
+    },
+    'perímetro área': {
+      id: 'VDrEzMWFoS0',
+      titulo: 'Área y perímetro de figuras planas',
+      desc: 'Fórmulas de cuadrado, rectángulo, triángulo y círculo con ejercicios',
+      tags: ['área','perímetro','polígono','fórmulas']
+    },
+    'volumen': {
+      id: 'W-RjBqkuPJo',
+      titulo: 'Volumen de prismas, cilindros y pirámides',
+      desc: 'V=Abase×h para prismas; V=(1/3)Abase×h para pirámides. Visual en 3D',
+      tags: ['volumen','prisma','pirámide','cilindro']
+    },
+  },
+  lengua: {
+    'texto argumentativo': {
+      id: 'GluihB7fNq4',
+      titulo: '¿Qué es un texto argumentativo?',
+      desc: 'Tesis, argumentos y conclusión. Cómo escribir un texto para convencer',
+      tags: ['argumentativo','tesis','argumentos','conclusión']
+    },
+    'metáfora símil': {
+      id: 'YCrkB-LNzp4',
+      titulo: 'Figuras retóricas: metáfora, símil, hipérbole',
+      desc: 'Diferencias entre figuras literarias con ejemplos creativos y divertidos',
+      tags: ['metáfora','símil','hipérbole','figura retórica']
+    },
+    'análisis literario': {
+      id: 'A0FuqkN9fok',
+      titulo: 'Cómo analizar un texto literario',
+      desc: 'Narrador, personajes, conflicto, tema, espacio y tiempo en una obra',
+      tags: ['análisis','narrador','personaje','conflicto']
+    },
+    'comprensión lectora': {
+      id: 'WJ8W0nZ5rMg',
+      titulo: 'Comprensión lectora — idea principal e inferencias',
+      desc: 'Estrategias para encontrar la idea principal y hacer inferencias en un texto',
+      tags: ['comprensión','idea principal','inferencia','lectura']
+    },
+    'género lírico': {
+      id: 'RdQYnNm-Y8U',
+      titulo: 'El género lírico — verso, estrofa y rima',
+      desc: 'Qué es un poema, cómo identificar versos, estrofas y tipos de rima',
+      tags: ['lírico','poema','verso','estrofa','rima']
+    },
+    'ortografía acentuación': {
+      id: 'q-7NxQN_dKc',
+      titulo: 'Reglas de acentuación — agudas, graves, esdrújulas',
+      desc: 'Cuándo y por qué se pone tilde. Reglas claras con ejemplos',
+      tags: ['tilde','aguda','grave','esdrújula','ortografía']
+    },
+  },
+  historia: {
+    'humanismo renacimiento': {
+      id: 'NxESFwhbFXo',
+      titulo: 'Humanismo y Renacimiento',
+      desc: 'Del teocentrismo al antropocentrismo. Arte, pensadores y la imprenta de Gutenberg',
+      tags: ['Humanismo','Renacimiento','Erasmo','Leonardo']
+    },
+    'reforma lutero': {
+      id: 'PbBDP1Elbb0',
+      titulo: 'La Reforma Protestante — Lutero y sus 95 tesis',
+      desc: 'Por qué Lutero protestó contra la Iglesia y cómo cambió Europa para siempre',
+      tags: ['Lutero','Reforma','Iglesia','protestante']
+    },
+    'conquista america': {
+      id: 'cTHRcLlUDfA',
+      titulo: 'La Conquista de América',
+      desc: 'Colón 1492, Cortés, Pizarro, encomienda, mita y resistencia indígena',
+      tags: ['conquista','Colón','América','encomienda']
+    },
+    'ilustración': {
+      id: 'OgH8FDStmwY',
+      titulo: 'La Ilustración — Rousseau, Locke y Montesquieu',
+      desc: 'El siglo de la razón. Los filósofos que inspiraron las revoluciones modernas',
+      tags: ['Ilustración','Rousseau','Locke','Montesquieu','razón']
+    },
+    'revolución francesa': {
+      id: 'cJhL3DmT7bA',
+      titulo: 'La Revolución Francesa',
+      desc: 'Causas, etapas y consecuencias. Libertad, igualdad, fraternidad y la guillotina',
+      tags: ['Revolución Francesa','1789','libertad','igualdad']
+    },
+    'revolución americana': {
+      id: 'WNNQQ0p8xDE',
+      titulo: 'Revolución Americana — Independencia de EE.UU.',
+      desc: 'Las colonias contra Gran Bretaña. 1776 y la primera democracia moderna',
+      tags: ['Revolución Americana','1776','independencia','colonias']
+    },
+  },
+  ciencias: {
+    'célula': {
+      id: 'eyXbiEGcqtY',
+      titulo: 'La célula — partes y funciones',
+      desc: 'Membrana, núcleo, citoplasma y orgánulos. Diferencias entre animal y vegetal',
+      tags: ['célula','membrana','núcleo','cloroplasto']
+    },
+    'mitosis': {
+      id: 'L0k-enzC4rE',
+      titulo: 'La mitosis — fases de la división celular',
+      desc: 'Interfase, profase, metafase, anafase y telofase explicadas visualmente',
+      tags: ['mitosis','profase','metafase','anafase','telofase']
+    },
+    'adn genética': {
+      id: 'yjzNBn8GKNM',
+      titulo: 'ADN, genes y herencia genética',
+      desc: 'Qué es el ADN, cómo se heredan los caracteres. Mendel y sus leyes',
+      tags: ['ADN','gen','herencia','Mendel','cromosoma']
+    },
+    'evolución darwin': {
+      id: 'GhHOjC4klEg',
+      titulo: 'Darwin y la teoría de la evolución',
+      desc: 'Selección natural, adaptación y evidencias fósiles. ¿Por qué sobreviven los más aptos?',
+      tags: ['Darwin','evolución','selección natural','fósil']
+    },
+    'tabla periódica': {
+      id: 'rz4Vfd3o41A',
+      titulo: 'La tabla periódica — grupos, períodos y elementos',
+      desc: 'Cómo leer la tabla periódica. Metales, no metales, número atómico y masa',
+      tags: ['tabla periódica','elemento','grupo','período','átomo']
+    },
+    'reacciones químicas': {
+      id: 'sl5m_dqGaY8',
+      titulo: 'Reacciones químicas — tipos y conservación de masa',
+      desc: 'Reactantes y productos. Síntesis, descomposición y sustitución con ejemplos',
+      tags: ['reacción química','reactantes','productos','masa']
+    },
+    'leyes newton': {
+      id: 'GR5KSVKxFQQ',
+      titulo: 'Las 3 leyes de Newton explicadas',
+      desc: 'Inercia, F=ma y acción-reacción. Ejemplos cotidianos y con fósiles/geología',
+      tags: ['Newton','F=ma','inercia','acción','reacción']
+    },
+    'energía': {
+      id: 'w4QFz39OEAw',
+      titulo: 'Energía cinética y potencial',
+      desc: 'Ec=½mv² y Ep=mgh. Conservación de la energía con ejemplos visuales',
+      tags: ['energía cinética','potencial','velocidad','altura']
+    },
+  }
+};
+
+// Detectar qué video mostrar según el mensaje del profe IA
+function detectarVideoRelevante(texto, materiaId) {
+  if(!texto || !materiaId || !VIDEOS[materiaId]) return null;
+  const t = texto.toLowerCase();
+  const vids = VIDEOS[materiaId];
+  
+  // Mapeo de palabras clave → tema de video
+  const mapas = {
+    math: {
+      'función lineal': ['función lineal','f(x)=mx','función que pasa por el origen'],
+      'función afín': ['función afín','f(x)=mx+n','coeficiente de posición'],
+      'pendiente': ['pendiente','inclinación de la recta','razón de cambio'],
+      'traslación': ['traslación','vector de traslación','mover la figura'],
+      'rotación': ['rotación','girar','90°','180°','270°'],
+      'simetría': ['simetría axial','simetría central','reflexión','eje de simetría'],
+      'semejanza thales': ['semejanza','thales','triángulo semejante','lados proporcionales'],
+      'perímetro área': ['perímetro','área','polígono','círculo','rectángulo','triángulo'],
+      'volumen': ['volumen','prisma','pirámide','cilindro'],
+    },
+    lengua: {
+      'texto argumentativo': ['texto argumentativo','tesis','argumentos','convencer'],
+      'metáfora símil': ['metáfora','símil','hipérbole','figura retórica','personificación'],
+      'análisis literario': ['análisis','narrador','personaje','conflicto','tema de la obra'],
+      'comprensión lectora': ['comprensión','idea principal','inferencia','leer'],
+      'género lírico': ['poema','verso','estrofa','rima','género lírico'],
+      'ortografía acentuación': ['tilde','acentuación','aguda','grave','esdrújula','ortografía'],
+    },
+    historia: {
+      'humanismo renacimiento': ['humanismo','renacimiento','gutenberg','leonardo','erasmo'],
+      'reforma lutero': ['lutero','reforma','protestante','iglesia','indulgencias'],
+      'conquista america': ['conquista','colón','encomienda','mita','indígena','virreinato'],
+      'ilustración': ['ilustración','rousseau','locke','montesquieu','razón','enciclopedia'],
+      'revolución francesa': ['revolución francesa','guillotina','libertad igualdad','1789'],
+      'revolución americana': ['revolución americana','1776','colonias','independencia eeuu'],
+    },
+    ciencias: {
+      'célula': ['célula','membrana','núcleo','citoplasma','orgánulo','cloroplasto'],
+      'mitosis': ['mitosis','profase','metafase','anafase','telofase','interfase','división celular'],
+      'adn genética': ['adn','gen','cromosoma','herencia','mendel','alelo','dominante'],
+      'evolución darwin': ['darwin','evolución','selección natural','fósil','adaptación'],
+      'tabla periódica': ['tabla periódica','número atómico','grupo','período','elemento químico'],
+      'reacciones químicas': ['reacción química','reactantes','productos','síntesis','descomposición'],
+      'leyes newton': ['newton','f=ma','inercia','acción','reacción','fuerza'],
+      'energía': ['energía cinética','energía potencial','velocidad','altura','ec=','ep='],
+    }
+  };
+
+  const mapa = mapas[materiaId];
+  if(!mapa) return null;
+
+  for(const [tema, keywords] of Object.entries(mapa)) {
+    if(keywords.some(k => t.includes(k)) && vids[tema]) {
+      return { tema, ...vids[tema] };
+    }
+  }
+  return null;
+}
+
+// Mostrar video — activado por el profe IA con [[VIDEO:tema]]
+function mostrarVideoEnClase(video, contextoExplicacion) {
+  if(!video) return;
+  const chat = document.getElementById('chat');
+  
+  // Evitar duplicar el mismo video
+  if(VIDEOS[(state.claseActual && state.claseActual.id)] && !Object.values(VIDEOS[state.claseActual.id]).some(v=>v.id===video.id)) return;
+  const existing = chat.querySelector(`[data-video="${video.id}"]`);
+  if(existing) return;
+  
+  const div = document.createElement('div');
+  div.className = 'video-sugerido';
+  div.setAttribute('data-video', video.id);
+  div.innerHTML = `
+    <div class="video-header">
+      <span class="video-icon">🎬</span>
+      <span class="video-label">El profe IA te muestra</span>
+    </div>
+    <div class="video-title">${video.titulo}</div>
+    <div class="video-desc">${video.desc}</div>
+    <div class="video-embed">
+      <iframe src="https://www.youtube.com/embed/${video.id}?rel=0&modestbranding=1&cc_lang_pref=es&cc_load_policy=1"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen loading="lazy" title="${video.titulo}"></iframe>
+    </div>
+    <div class="video-tags">${video.tags.map(t=>`<span class="video-tag">${t}</span>`).join('')}</div>
+  `;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function renderBloques(){
+  const cont=document.getElementById('bloques-list');
+  cont.innerHTML='';
+  const todosDone=Object.values(state.bloques).every(v=>v);
+  bloquesConfig.forEach(b=>{
+    const done=state.bloques[b.id];
+    const div=document.createElement('div');
+    div.className='bloque-item'+(done?' done':'');
+    div.innerHTML=`
+      <div class="bi-icon">${b.icon}</div>
+      <div class="bi-info"><div class="bi-name">${b.name}</div><div class="bi-desc">${b.desc}</div></div>
+      <span class="bi-status ${done?'s-done':'s-pend'}">${done?'✓ Listo':'Pendiente'}</span>`;
+    if(!done) div.onclick=()=>iniciarClase(b);
+    cont.appendChild(div);
+  });
+  document.getElementById('paleo-lock-card').style.display=todosDone?'none':'block';
+  document.getElementById('paleo-unlock-card').style.display=todosDone?'block':'none';
+  state.paleoBloqueada=!todosDone;
+}
+
+// ══ CLASE CON PROFE IA ══
+let claseInterval=null;
+
+function iniciarClase(bloque){
+  if(claseInterval){clearInterval(claseInterval);claseInterval=null;}
+  state.claseActual=bloque;
+  state.chatHistory=[];
+  state.claseSecs=0;
+  document.getElementById('clase-icon').textContent=bloque.icon;
+  document.getElementById('clase-nombre').textContent=bloque.name;
+  document.getElementById('clase-sub').textContent='8° básico · Profe IA activo';
+  document.getElementById('clase-etapa').textContent='Explicación del tema';
+  document.getElementById('chat').innerHTML='';
+  document.getElementById('clase-fill').style.width='5%';
+  document.getElementById('clase-timer').textContent='00:00';
+  document.getElementById('clase-timer').classList.remove('alerta');
+  document.getElementById('card-atrasadas').style.display='none';
+  // Mostrar/ocultar recursos según materia
+  const cardTabla = document.getElementById('card-tabla-periodica');
+  if(cardTabla) cardTabla.style.display = (bloque.id==='ciencias') ? 'block' : 'none';
+  const cardGeo = document.getElementById('card-geometria-mineduc');
+  if(cardGeo) cardGeo.style.display = (bloque.id==='math') ? 'block' : 'none';
+  if(!state.log.materias.includes(bloque.name)) state.log.materias.push(bloque.name);
+  goTo('s-clase');
+  agregarMsg('profe', '🦕 Preparando algo interesante para ti...');
+  // Ajustar prompt según ánimo
+  const sistemaAdaptado=construirSistemaAdaptado(bloque);
+  // Primer mensaje: instrucción explícita para que el profe arranque con explicación real
+  const primerMensaje=`[INICIO DE CLASE] Ánimo: ${state.mood} (${state.moodNivel}/5) | Concentración: ${state.concentracion}/5 | Energía: ${state.energia}/5. ${(idiomaActual && idiomaActual.instruccion)||''}
+MÉTODO: 1) ENGANCHA con dato sorprendente de dinosaurios/geología. 2) Explica en máx 2 oraciones. 3) Añade [IMG:english description] si ayuda visualizar. 4) Termina con [OPC:A|B|C] o pregunta abierta. Tú decides el tema.`;  vozHistorial=[]; vozIndexActual=-1;
+  state.chatHistory.push({role:'user',content:primerMensaje});
+  mostrarTypingIA();
+  llamarIA(state.chatHistory, sistemaAdaptado, (resp)=>{
+    state.chatHistory.push({role:'assistant',content:resp});
+    quitarTypingIA();
+    procesarYMostrarRespuesta(resp);
+  });
+  if(claseInterval) clearInterval(claseInterval);
+  claseInterval=setInterval(()=>{
+    state.claseSecs++;
+    const m=Math.floor(state.claseSecs/60),s=state.claseSecs%60;
+    const timerEl=document.getElementById('clase-timer');
+    timerEl.textContent=m+':'+(s<10?'0':'')+s;
+    const maxSecs=(state.minutosClaseMax||45)*60;
+    if(state.claseSecs===maxSecs){
+      timerEl.classList.add('alerta');
+      mostrarLimite45();
+    }
+  },1000);
+}
+
+function construirSistemaAdaptado(bloque){
+  let ajuste='';
+  if(state.moodNivel>=4) ajuste='IMPORTANTE: hoy Catalina está cansada/difícil. Sesión muy corta (máx 15 min), 1 tema simple, muchos refuerzos positivos, nada de ejercicios difíciles.';
+  else if(state.moodNivel===3) ajuste='Hoy Catalina está regular. Actividades visuales, ejemplos concretos, pausa si la notas dispersa.';
+  else ajuste='Catalina está bien hoy. Puedes desarrollar el tema con normalidad.';
+
+  // Instrucción para usar material de apoyo — el profe dirige, el material apoya
+  const instruccionMaterial = ` USO DE MATERIAL: Cuando acabes de explicar un concepto clave y creas que un video ayudaría a Catalina a visualizarlo mejor, escribe [[VIDEO:tema]] en tu respuesta (por ejemplo [[VIDEO:pendiente]] o [[VIDEO:célula]]). Hazlo DESPUÉS de tu explicación, no antes. No uses el tag en cada mensaje, solo cuando realmente ayude a visualizar algo complejo. Los temas disponibles son: ${Object.keys(VIDEOS[bloque.id]||{}).join(', ')}.`;
+
+  const idExtra=(idiomaActual && idiomaActual.instruccion)?' IDIOMA: '+idiomaActual.instruccion:'';
+  return bloque.sistema + idExtra + ' AJUSTE DE SESIÓN: ' + ajuste + instruccionMaterial;
+}
+
+function mostrarLimite45(){
+  document.getElementById('modal-limite45').style.display='flex';
+  const texto=state.moodNivel>=4
+    ? '¡Ya llevas mucho tiempo! Eso es suficiente por hoy. ¿Descansamos?'
+    : `Para continuar, el profe IA propone repasar algo que te costó antes. ¿De acuerdo?`;
+  document.getElementById('limite45-texto').textContent=texto;
+}
+function cerrarLimite45(){
+  document.getElementById('modal-limite45').style.display='none';
+  salirClase();
+}
+function continuarConActividad(){
+  document.getElementById('modal-limite45').style.display='none';
+  document.getElementById('card-atrasadas').style.display='none';
+  state.claseSecs=0;
+  document.getElementById('clase-timer').classList.remove('alerta');
+  const msg='OK Catalina, vamos a repasar algo que vimos antes. ¿Cuál materia te costó más? Así la practicamos juntos. 🦴';
+  agregarMsg('profe', msg);
+  state.chatHistory.push({role:'assistant',content:msg});
+}
+
+function enviar(){
+  const inp=document.getElementById('cinput');
+  const msg=inp.value.trim();
+  if(!msg||!state.claseActual) return;
+  inp.value=''; inp.style.height='auto';
+  agregarMsg('cata', msg);
+  procesarMensaje(msg);
+}
+
+function completarBloque(id){
+  if(claseInterval){clearInterval(claseInterval);claseInterval=null;}
+  state.bloques[id]=true;
+  agregarMsg('profe','🎉 ¡Increíble, Catalina! Completaste '+state.claseActual.name+'. ¡Un bloque más cerca de los dinosaurios!');
+  document.getElementById('clase-fill').style.width='100%';
+  document.getElementById('clase-etapa').textContent='¡Completado!';
+  enviarReporte('Bloque completado: '+state.claseActual.name);
+  setTimeout(()=>goTo('s-bloques'),2500);
+}
+
+function salirClase(){
+  if(claseInterval){clearInterval(claseInterval);claseInterval=null;}
+  detenerVoz();
+  document.querySelectorAll('.video-sugerido iframe').forEach(f=>{try{f.src='';}catch(e){}});
+  goTo('s-bloques');
+}
+
+// ══ PALEONTOLOGÍA ══
+const paleoFacts=[
+  {emoji:'🦕',title:'El Patagotitan mayorum',text:'El dinosaurio más grande conocido vivió en lo que hoy es Argentina. Medía 37 metros y pesaba como 10 elefantes. Sus huesos aún se están estudiando.'},
+  {emoji:'🌋',title:'Fósiles y volcanes',text:'Las erupciones volcánicas a veces preservan fósiles perfectamente, cubriendo animales en ceniza que luego se mineraliza. ¡La geología y la paleontología trabajan juntas!'},
+  {emoji:'🦴',title:'Los huesos se convierten en roca',text:'En la fosilización, los minerales del agua reemplazan los tejidos del hueso poco a poco durante miles de años. El fósil es literalmente roca con la forma original del hueso.'},
+  {emoji:'⏳',title:'La Tierra tiene 4.500 millones de años',text:'Los dinosaurios existieron entre hace 230 y 66 millones de años. Los humanos llevamos solo 300.000 años. ¡Somos recién llegados!'},
+];
+
+function iniciarPaleo(){
+  const chat=document.getElementById('paleo-chat-area');
+  if(chat.children.length===0){
+    agregarMsgPaleo('profe','🦕 ¡Bienvenida al mundo de la Paleontología, Catalina! Pregúntame lo que quieras sobre dinosaurios, fósiles, geología, evolución... ¡Todo vale! ¿Por dónde quieres empezar?');
+  }
+  const fc=document.getElementById('paleo-facts');
+  if(fc.children.length===0){
+    paleoFacts.forEach(f=>{
+      const div=document.createElement('div'); div.className='fact-card';
+      div.innerHTML=`<span class="fact-emoji">${f.emoji}</span><div class="fact-title">${f.title}</div><div class="fact-text">${f.text}</div>`;
+      fc.appendChild(div);
+    });
+  }
+}
+
+function paleoPregunta(){
+  const inp=document.getElementById('paleo-input');
+  const msg=inp.value.trim();
+  if(!msg) return;
+  inp.value='';
+  agregarMsgPaleo('cata',msg);
+  state.paleoHistory.push({role:'user',content:msg});
+  const sistema=`Eres el Profe IA de Paleontología de Catalina, 14 años, apasionada por dinosaurios y geología. Esta es su zona de recompensa — sin presión. REGLAS: entusiasmo, datos fascinantes, conecta con geología, emojis con moderación, español neutro, máx 4 oraciones, sugiere preguntas de seguimiento. RECURSO DISPONIBLE: cuando Catalina pregunte sobre tipos o clasificación de dinosaurios, menciona la guía ilustrada de la UNAM en https://www.revista.unam.mx/vol.2/num4/sabias1/tipos.html — tiene 25 especies con imágenes clasificadas en Saurisquios (cadera de lagarto) y Ornitisquios (cadera de ave).`;
+  llamarIA(state.paleoHistory, sistema, (resp)=>{
+    state.paleoHistory.push({role:'assistant',content:resp});
+    // Limpiar tags [[VIDEO:...]] del texto visible en paleo
+    const respLimpia = resp.replace(/\[\[VIDEO:[^\]]+\]\]/gi,'').trim();
+    agregarMsgPaleo('profe', respLimpia);
+  });
+}
+
+// ══ LLAMADA API CLAUDE ══
+async function llamarIA(messages, system, callback){
+  if(!API_KEY){ callback('⚠️ Falta la API Key. Recarga la página.'); return; }
+  const typing=agregarMsgProfeTyping();
+  try {
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key': API_KEY,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:'claude-sonnet-4-5',
+        max_tokens:500,
+        system:system,
+        messages:messages
+      })
+    });
+    const data=await res.json();
+    if(data.error) throw new Error(data.error.message);
+    const resp=(data.content && data.content[0] && data.content[0].text)||'Perdona, no pude responder ahora.';
+    typing.remove();
+    callback(resp);
+  } catch(e){
+    typing.remove();
+    console.error('Error:',e.message);
+    callback('⚠️ '+e.message);
+  }
+}
+
+async function llamarIADirecta(messages, system){
+  if(!API_KEY) return '(sin API key)';
+  try {
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':API_KEY,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:300,system:system,messages:messages})
+    });
+    const data=await res.json();
+    return (data.content && data.content[0] && data.content[0].text)||'';
+  } catch(e){ return ''; }
+}
+
+// ══ PROCESADOR DE RESPUESTAS DEL PROFE IA ══
+// El profe puede escribir [[VIDEO:tema]] para mostrar un video como parte de su explicación
+// Ejemplo: "La pendiente mide la inclinación. [[VIDEO:pendiente]] Mira este video donde lo ves visualmente."
+function procesarRespuestaProfe(resp, materiaId) {
+  const tagRegex = /\[\[VIDEO:([^\]]+)\]\]/gi;
+  const tags = [...resp.matchAll(tagRegex)];
+  
+  if(tags.length === 0) return; // Sin videos — nada que hacer
+  
+  tags.forEach(match => {
+    const temaVideo = match[1].trim().toLowerCase();
+    const vids = VIDEOS[materiaId];
+    if(!vids) return;
+    
+    // Buscar el video por nombre de tema (coincidencia parcial)
+    let video = null;
+    for(const [key, val] of Object.entries(vids)) {
+      if(key.includes(temaVideo) || temaVideo.includes(key.split(' ')[0])) {
+        video = val;
+        break;
+      }
+    }
+    if(!video) return;
+    
+    // Extraer el texto que el profe escribió antes del tag como contexto
+    const posTag = resp.indexOf(match[0]);
+    const textoAntes = resp.substring(Math.max(0, posTag - 120), posTag).trim();
+    const contexto = textoAntes.length > 20 ? textoAntes : video.desc;
+    
+    setTimeout(() => mostrarVideoEnClase(video, contexto), 600);
+  });
+}
+
+// ══ HELPERS CHAT ══
+function procesarYMostrarRespuesta(texto){
+  // Procesa respuesta del profe: extrae [IMG:], [OPC:], habla el texto
+  const chat=document.getElementById('chat');
+  const imgMatch=texto.match(/\[IMG:([^\]]+)\]/i);
+  const opcMatch=texto.match(/\[OPC:([^\]]+)\]/i);
+  const txtLimpio=texto.replace(/\[IMG:[^\]]+\]/gi,'').replace(/\[OPC:[^\]]+\]/gi,'').replace(/\[\[VIDEO:[^\]]+\]\]/gi,'').replace(/\[\[BLOQUE_COMPLETADO\]\]/gi,'').trim();
+
+  if(imgMatch){
+    const posImg=texto.indexOf(imgMatch[0]);
+    const antes=limpiarMarkdown(texto.substring(0,posImg).replace(/\[OPC:[^\]]+\]/gi,'').trim());
+    const despues=limpiarMarkdown(texto.substring(posImg+imgMatch[0].length).replace(/\[OPC:[^\]]+\]/gi,'').trim());
+    if(antes){ const d=document.createElement('div'); d.className='msg msg-profe'; d.textContent=antes; chat.appendChild(d); chat.scrollTop=chat.scrollHeight; hablar(antes); }
+    mostrarVisualConExplicacion(imgMatch[1], despues||antes||'Mira esta imagen mientras explico...', chat);
+  } else {
+    const d=document.createElement('div'); d.className='msg msg-profe'; d.textContent=limpiarMarkdown(txtLimpio); chat.appendChild(d); chat.scrollTop=chat.scrollHeight; hablar(limpiarMarkdown(txtLimpio));
+  }
+  if(opcMatch){ const opts=opcMatch[1].split('|').map(s=>s.trim()).filter(Boolean); if(opts.length>1) setTimeout(()=>mostrarOpciones(opts,chat),600); }
+  if(texto.includes('[[VIDEO:')){
+    const mat=(state.claseActual && state.claseActual.id);
+    if(mat) procesarRespuestaProfe(texto,mat);
+  }
+}
+
+function mostrarOpciones(opts,chatEl){
+  const chat=chatEl||document.getElementById('chat');
+  const wrap=document.createElement('div'); wrap.style.cssText='display:flex;flex-direction:column;gap:6px;margin:6px 0;';
+  opts.forEach(op=>{
+    const btn=document.createElement('button');
+    btn.style.cssText='background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--rs);padding:11px 14px;cursor:pointer;font-size:13px;color:var(--text2);text-align:left;font-family:"Nunito",sans-serif;transition:all 0.15s;';
+    btn.textContent=op;
+    btn.onmouseover=()=>{btn.style.borderColor='var(--purple)';btn.style.color='var(--text)';};
+    btn.onmouseout=()=>{btn.style.borderColor='var(--border)';btn.style.color='var(--text2)';};
+    btn.onclick=()=>{
+      wrap.querySelectorAll('button').forEach(b=>b.disabled=true);
+      btn.style.borderColor='var(--green)'; btn.style.background='rgba(78,203,141,0.1)'; btn.style.color='var(--green)';
+      setTimeout(()=>{ agregarMsg('cata',op); procesarMensaje(op); },200);
+    };
+    wrap.appendChild(btn);
+  });
+  chat.appendChild(wrap); chat.scrollTop=chat.scrollHeight;
+}
+
+function procesarMensaje(texto){
+  state.chatHistory.push({role:'user',content:texto});
+  mostrarTypingIA();
+  const sistema=construirSistemaAdaptado(state.claseActual);
+  llamarIA(state.chatHistory, sistema, resp=>{
+    state.chatHistory.push({role:'assistant',content:resp});
+    quitarTypingIA();
+    procesarYMostrarRespuesta(resp);
+    const pct=Math.min(95,20+state.chatHistory.length*7);
+    document.getElementById('clase-fill').style.width=pct+'%';
+    if(resp.includes('[[BLOQUE_COMPLETADO]]')) setTimeout(()=>completarBloque(state.claseActual.id),1000);
+  });
+}
+
+function mostrarTypingIA(){
+  const chat=document.getElementById('chat');
+  const d=document.createElement('div'); d.className='msg msg-profe typing'; d.id='typing-ia';
+  d.innerHTML='<div style="display:flex;gap:5px;align-items:center"><div style="width:8px;height:8px;background:var(--text3);border-radius:50%;animation:bounce 1.2s ease-in-out infinite"></div><div style="width:8px;height:8px;background:var(--text3);border-radius:50%;animation:bounce 1.2s ease-in-out 0.2s infinite"></div><div style="width:8px;height:8px;background:var(--text3);border-radius:50%;animation:bounce 1.2s ease-in-out 0.4s infinite"></div></div>';
+  chat.appendChild(d); chat.scrollTop=chat.scrollHeight;
+  document.getElementById('send-btn') && (document.getElementById('send-btn').disabled=true);
+}
+
+function quitarTypingIA(){
+  const t=document.getElementById('typing-ia'); if(t) t.remove();
+  document.getElementById('send-btn') && (document.getElementById('send-btn').disabled=false);
+}
+
+function agregarMsg(quien, texto){
+  const chat=document.getElementById('chat');
+  const d=document.createElement('div');
+  d.className='msg '+(quien==='profe'?'msg-profe':'msg-cata');
+  d.textContent=limpiarMarkdown(texto);
+  chat.appendChild(d);
+  chat.scrollTop=chat.scrollHeight;
+  if(quien==='profe') hablar(texto);
+  return d;
+}
+function agregarMsgProfeTyping(){
+  const chat=document.getElementById('chat');
+  const d=document.createElement('div');
+  d.className='msg msg-profe typing';
+  d.textContent='El profe IA está escribiendo...';
+  chat.appendChild(d);
+  chat.scrollTop=chat.scrollHeight;
+  return d;
+}
+function agregarMsgPaleo(quien, texto){
+  const chat=document.getElementById('paleo-chat-area');
+  const d=document.createElement('div');
+  d.className='msg '+(quien==='profe'?'msg-profe':'msg-cata');
+  d.textContent=texto;
+  chat.appendChild(d);
+  chat.scrollTop=chat.scrollHeight;
+  return d;
+}
+
+// ══ EMAIL ══
+async function enviarEmail(asunto, cuerpo, destinatarios){
+  for(const email of destinatarios){
+    try {
+      await emailjs.send(EMAIL_SVC, EMAIL_TPL, {
+        to_email: email,
+        subject: '[CATALINA PLATAFORMA] '+asunto,
+        message: cuerpo
+      });
+    } catch(e){ console.log('Email error:',e); }
+  }
+}
+
+async function enviarReporte(tipo){
+  try {
+  const cuerpo=`REPORTE PLATAFORMA CATALINA\nTipo: ${tipo}\nFecha: ${new Date().toLocaleString('es-CL')}\nÁnimo: ${state.log.estadoAnimico||'N/A'}\nMaterias: ${state.log.materias.join(', ')||'Ninguna'}\nTiempo sesión: ${Math.floor(state.sesionSecs/60)} min`;
+  notif('📧 Reporte enviado a tutor');
+  await enviarEmail(tipo+' — '+new Date().toLocaleDateString('es-CL'), cuerpo, [TUTOR_EMAIL]);
+  } catch(e){ console.log('Error reporte:',e); }
+}
+
+// ══ NOTIF ══
+function notif(msg, tipo=''){
+  const n=document.createElement('div');
+  n.className='notif'+(tipo?' '+tipo:'');
+  n.textContent=msg;
+  document.body.appendChild(n);
+  setTimeout(()=>n.remove(),3500);
+}
+
+// ══ INIT ══
+// Al cargar, restaurar API key si existe
+(function(){
+  const stored = localStorage.getItem('cat_api_key');
+  if(stored){
+    API_KEY = stored;
+    const inp = document.getElementById('apikey-input');
+    if(inp){ inp.value = stored; }
+    const status = document.getElementById('apikey-status');
+    if(status){ status.textContent='✅ Key guardada — selecciona tu ánimo para comenzar'; status.style.color='var(--green)'; }
+    // Si hay key, el botón se activa en cuanto seleccione ánimo — ya no necesita validación extra
+  }
+})();
+renderBloques();
+verificarReporteDominical();
+</script>
+</body>
+</html>
