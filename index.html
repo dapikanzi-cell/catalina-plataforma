@@ -685,15 +685,15 @@ MODO TAREA — MÉTODO SOCRÁTICO:
 Tu misión es ENSEÑAR a Catalina a resolver su tarea, JAMÁS resolverla por ella.
 
 1. ANALIZA: dile de qué trata la tarea en 1-2 oraciones entusiastas.
-2. PREGUNTA PRIMERO: "¿Por dónde crees que podemos empezar?"
+2. PREGUNTA PRIMERO: ¿Por dónde crees que podemos empezar?
 3. GUÍA paso a paso: para cada ejercicio, pregunta antes de explicar.
 4. Si se EQUIVOCA: pista + nuevo ejemplo de dinos. NUNCA la respuesta.
-5. Si INSISTE en la respuesta: "No te la doy — cuando lo descubras tú, no lo olvidarás nunca."
+5. Si INSISTE en la respuesta: No te la doy, cuando lo descubras tú, no lo olvidarás nunca.
 6. CELEBRA cada paso que ella resuelva sola.
 7. Al TERMINAR: pídele que explique el procedimiento con sus propias palabras.
 
 REGLAS: NUNCA des respuestas directas. SIEMPRE termina con pregunta. Máx 3 oraciones. Tono amigable. Ejemplos de dinosaurios cuando puedas.
-'+idiomaActual.instruccion;
+` + (idiomaActual?.instruccion || '');
 }
 
 
@@ -826,11 +826,7 @@ function mostrarBloqueNavegacion(url){
 async function reportarIntento(detalle){
   try {
   state.log.alertas.push(detalle+' @ '+new Date().toLocaleTimeString('es-CL'));
-  const cuerpo=`⚠️ ALERTA DE SEGURIDAD — Plataforma Catalina
-Fecha: ${new Date().toLocaleString('es-CL')}
-Detalle: ${detalle}
-Materia activa: ${state.claseActual?.name||'ninguna'}
-Ánimo: ${state.log.estadoAnimico||'N/A'}`;
+  const cuerpo='ALERTA DE SEGURIDAD - Plataforma Catalina | Fecha: '+new Date().toLocaleString('es-CL')+' | Detalle: '+detalle+' | Materia activa: '+(state.claseActual?.name||'ninguna')+' | Animo: '+(state.log.estadoAnimico||'N/A');
   await enviarEmail('🚨 ALERTA navegación Catalina', cuerpo, [TUTOR_EMAIL]);
   } catch(e){ console.log('Error alerta:',e); }
 }
